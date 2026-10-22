@@ -3,3 +3,9 @@ build/
 .dart_tool/
 .env
 .DS_Store
+# secretos: llaves de servicio de Firebase y firma de Android (la configuracion de la app SI se versiona, I-02)
+*-adminsdk-*.json
+serviceAccount*.json
+key.properties
+*.keystore
+*.jks
