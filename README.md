@@ -9,10 +9,14 @@ Proyecto de clase de Desarrollo Móvil Integral (10.º cuatrimestre, DATID, UTEZ
 | Carpeta o archivo | Qué es |
 |---|---|
 | `apps/mobile/` | App Flutter (`cafeteria_utez`, org `mx.edu.utez`) |
-| `apps/api/` | API Node + Express con `GET /health` |
+| `apps/api/` | API Node + Express con `GET /health` (ver su `README.md`) |
 | `docs/` | `01-alcance.md` (SOW), `02-prd.md`, `03-integraciones.md`, `05-datos.md`, `06-convenciones.md`; `04-arquitectura.md` se omite y el SOW dice por qué |
 | `AGENTS.md` | Reglas para cualquier persona o agente |
 | `scripts/check.sh` y `.githooks/` | El sensor: verifica todo con un comando y el hook lo ejecuta |
+
+## Roles
+
+Este proyecto de clase tiene un solo autor, así que no hay reparto de roles. En el repositorio de tu equipo, esta sección lleva la tabla de roles: quién hace cada rol y de qué se encarga.
 
 ## Cómo correrlo
 
