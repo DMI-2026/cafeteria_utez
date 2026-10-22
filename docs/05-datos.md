@@ -4,12 +4,12 @@
 
 ## Tabla de decisiones
 
-| # | Decisión | Por qué | Fecha |
-|---|---|---|---|
-| M-01 | El precio se guarda en centavos enteros. Descartado: número decimal | Evita errores de redondeo al sumar el total del pedido | 2026-10-22 |
-| M-02 | La línea de pedido copia el nombre y el precio del producto al momento de pedir. Descartado: apuntar solo al producto | Si la cafetería cambia un precio mañana, el pedido de hoy no cambia de total | 2026-10-22 |
-| M-03 | El estado del pedido es uno de `recibido`, `en_preparacion`, `listo` o `entregado`. Descartado: un booleano «listo» | H-03 del PRD distingue en preparación de listo, y la cocina necesita saber cuáles ya se entregaron | 2026-10-22 |
-| M-04 | Un producto no se borra: se marca `disponible: false`. Descartado: borrarlo | Los pedidos viejos lo siguen mostrando y H-01 pide verlo agotado en gris | 2026-10-22 |
+| # | Decisión | Alternativa descartada | Por qué | Fecha |
+|---|---|---|---|---|
+| M-01 | El precio se guarda en centavos enteros | Número decimal | Evita errores de redondeo al sumar el total del pedido | 2026-10-22 |
+| M-02 | La línea de pedido copia el nombre y el precio del producto al momento de pedir | Apuntar solo al producto | Si la cafetería cambia un precio mañana, el pedido de hoy no cambia de total | 2026-10-22 |
+| M-03 | El estado del pedido es uno de `recibido`, `en_preparacion`, `listo` o `entregado` | Un booleano «listo» | H-03 del PRD distingue en preparación de listo, y la cocina necesita saber cuáles ya se entregaron | 2026-10-22 |
+| M-04 | Un producto no se borra: se marca `disponible: false` | Borrarlo | Los pedidos viejos lo siguen mostrando y H-01 pide verlo agotado en gris | 2026-10-22 |
 
 ## ERD conceptual
 
