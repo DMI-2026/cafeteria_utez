@@ -1,0 +1,5 @@
+node_modules/
+build/
+.dart_tool/
+.env
+.DS_Store
