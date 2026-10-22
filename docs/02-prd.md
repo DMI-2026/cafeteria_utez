@@ -4,11 +4,11 @@
 
 ## Tabla de decisiones
 
-| # | Decisión | Por qué | Fecha |
-|---|---|---|---|
-| P-01 | Tres historias en la v1: menú, pedido y estado del pedido. Descartada: incluir la pantalla de cocina en la v1 | Es lo mínimo para que alguien pida y recoja sin fila; la cocina entra en la fase 2 del SOW y mientras tanto cambia el estado desde la consola de Firebase | 2026-10-22 |
-| P-02 | El pedido se paga en caja. Descartada: pagar desde la app | Pagos en línea quedan fuera (D-04 de `01-alcance.md`) | 2026-10-22 |
-| P-03 | Pedir exige iniciar sesión; ver el menú no. Descartada: pedir como invitado | Sin cuenta no hay a quién avisar ni cómo evitar pedidos falsos; el menú público baja la barrera para entrar (D-05) | 2026-10-22 |
+| # | Decisión | Alternativa descartada | Por qué | Fecha |
+|---|---|---|---|---|
+| P-01 | Tres historias en la v1: menú, pedido y estado del pedido | Incluir la pantalla de cocina en la v1 | Es lo mínimo para que alguien pida y recoja sin fila; la cocina entra en la fase 2 del SOW y mientras tanto cambia el estado desde la consola de Firebase | 2026-10-22 |
+| P-02 | El pedido se paga en caja | Pagar desde la app | Pagos en línea quedan fuera (D-04 de `01-alcance.md`) | 2026-10-22 |
+| P-03 | Pedir exige iniciar sesión; ver el menú no | Pedir como invitado | Sin cuenta no hay a quién avisar ni cómo evitar pedidos falsos; el menú público baja la barrera para entrar (D-05) | 2026-10-22 |
 
 ## Personas usuarias
 
@@ -21,7 +21,7 @@
 
 Como persona de la comunidad universitaria quiero ver el menú del día para decidir qué pedir sin ir a la cafetería.
 
-Módulo del SOW: Menú (fase 1).
+Módulo del SOW: Menú · fase 1 · Prioridad: alta.
 
 Criterios de aceptación:
 - El menú aparece en menos de 2 segundos con conexión Wi-Fi.
@@ -33,7 +33,7 @@ Criterios de aceptación:
 
 Como persona registrada quiero armar un pedido y confirmarlo para recogerlo sin hacer fila.
 
-Módulo del SOW: Pedido (fase 1).
+Módulo del SOW: Pedido · fase 1 · Prioridad: alta.
 
 Criterios de aceptación:
 - Se confirma en máximo 4 toques desde el menú.
@@ -44,7 +44,7 @@ Criterios de aceptación:
 
 Como persona que ya pidió quiero ver si mi pedido está en preparación o listo para saber cuándo ir.
 
-Módulo del SOW: Estado del pedido (fase 1).
+Módulo del SOW: Estado del pedido · fase 1 · Prioridad: media.
 
 Criterios de aceptación:
 - El estado cambia en la app en menos de 5 segundos después de que la cocina lo cambia.
