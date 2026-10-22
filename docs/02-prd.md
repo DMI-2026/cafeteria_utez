@@ -27,6 +27,7 @@ Criterios de aceptación:
 - El menú aparece en menos de 2 segundos con conexión Wi-Fi.
 - Cada producto muestra nombre y precio en pesos.
 - Un producto agotado se ve gris y no se puede agregar al pedido.
+- Con más de 25 °C el menú sugiere una bebida fría y con menos de 18 °C una caliente; si el clima no responde en 3 segundos, la sugerencia se omite y el menú aparece completo.
 
 ### H-02 · Hacer un pedido
 

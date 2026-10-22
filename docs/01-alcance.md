@@ -23,7 +23,7 @@ Que la comunidad universitaria haga pedidos a la cafetería de la UTEZ desde el 
 
 | Fase | Módulos | Qué incluye |
 |---|---|---|
-| 1 (v1) | Menú, pedido, estado del pedido | La persona inicia sesión, ve el menú, arma y confirma un pedido y ve si está en preparación o listo. En esta fase el personal cambia el estado desde la consola de Firebase |
+| 1 (v1) | Menú, pedido, estado del pedido | La persona inicia sesión, ve el menú con una sugerencia de bebida según el clima, arma y confirma un pedido y ve si está en preparación o listo. En esta fase el personal cambia el estado desde la consola de Firebase |
 | 2 | Cocina | Pantalla para que la cocina vea los pedidos nuevos sin recargar y cambie su estado |
 | 3 | Notificaciones | Aviso en el celular cuando el pedido está listo, con el permiso pedido en el momento adecuado |
 
