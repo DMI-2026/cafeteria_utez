@@ -4,11 +4,11 @@
 
 ## Tabla de decisiones
 
-| # | Decisión | Por qué | Fecha |
-|---|---|---|---|
-| I-01 | Primero Firebase Auth y Firestore (semanas 7 y 9), después Open-Meteo (semana 10) y al final Cloud Messaging (semana 14). Descartada: empezar por la API de terceros | Sin sesión y sin datos no hay pedido que mostrar; el clima es un extra que no bloquea nada | 2026-10-22 |
-| I-02 | Ninguna llave vive en el repositorio: la configuración de Firebase se genera en cada máquina y las variables de la API se leen del entorno (`.env` ignorado). Descartada: llaves en un archivo versionado de configuración | Un secreto subido sigue expuesto en el historial aunque se borre después | 2026-10-22 |
-| I-03 | La API de terceros es Open-Meteo, sin llave. Descartada: OpenWeatherMap | No pide registro ni llave, así que no hay secreto que cuidar y cualquier persona del grupo corre el proyecto | 2026-10-22 |
+| # | Decisión | Alternativa descartada | Por qué | Fecha |
+|---|---|---|---|---|
+| I-01 | Primero Firebase Auth y Firestore (semanas 7 y 9), después Open-Meteo (semana 10) y al final Cloud Messaging (semana 14) | Empezar por la API de terceros | Sin sesión y sin datos no hay pedido que mostrar; el clima es un extra que no bloquea nada | 2026-10-22 |
+| I-02 | Ningún secreto vive en el repositorio: las variables de la API se leen del entorno (`.env` ignorado) y las llaves de servicio de Firebase nunca se suben. Los archivos de configuración de Firebase de la app (`google-services.json`, `GoogleService-Info.plist`, `firebase_options.dart`) sí se versionan | Secretos en un archivo versionado; o ignorar la configuración de la app y que cada persona la genere | La configuración de la app solo identifica el proyecto y no da acceso: la protegen las reglas de Firestore; versionarla deja que cualquier persona clone y corra sin pasos extra. Un secreto subido sigue expuesto en el historial aunque se borre después | 2026-10-22 |
+| I-03 | La API de terceros es Open-Meteo, sin llave | OpenWeatherMap | No pide registro ni llave, así que no hay secreto que cuidar y cualquier persona del grupo corre el proyecto | 2026-10-22 |
 
 ## Familias de integraciones y orden en el roadmap
 
@@ -23,7 +23,7 @@
 ## Firebase Auth
 
 - Qué datos viajan: correo y token de sesión; la contraseña nunca llega a nuestra API.
-- Dónde viven las credenciales: el token en almacenamiento seguro del dispositivo; la configuración del proyecto de Firebase se genera con la herramienta de Firebase en cada máquina y no se sube.
+- Dónde viven las credenciales: el token en almacenamiento seguro del dispositivo; los archivos de configuración de la app se versionan (I-02) porque no son secretos, y no hay llave de servicio en el repositorio.
 - Si falla: la app muestra «No pudimos iniciar sesión, intenta de nuevo» y conserva el carrito.
 - Límites o costo: plan gratuito de Firebase; la verificación por correo no tiene costo para este volumen.
 - Cómo se prueba: con un doble de la fuente de autenticación; sin llamadas reales a Firebase en las pruebas.
