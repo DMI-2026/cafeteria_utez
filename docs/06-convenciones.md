@@ -4,14 +4,14 @@
 
 ## Tabla de decisiones
 
-| # | Decisión | Por qué | Fecha |
-|---|---|---|---|
-| C-01 | Una rama por issue: `feat/<n>-<tema>` o `fix/<n>-<tema>`. Descartado: trabajar todos sobre `main`. El arranque de la semana 8 se hizo en clase directo sobre `main`; la regla vale desde la semana 9 | Cada cambio se revisa y se revierte por separado | 2026-10-22 |
-| C-02 | Conventional Commits en español (`feat`, `fix`, `docs`, `test`, `chore`). Descartado: mensajes libres | Historial legible para el equipo y para la defensa | 2026-10-22 |
-| C-03 | `main` solo recibe pull requests aprobados por otra persona. Descartado: aprobar el propio PR | La revisión automática es un sensor más, no la aprobación | 2026-10-22 |
-| C-04 | `./scripts/check.sh` es la única forma de verificar, y el hook `pre-commit` lo ejecuta. Descartado: recordar correr cada comando a mano | El mismo comando para personas, agentes y hook; un commit con una prueba rota es rechazado | 2026-10-22 |
-| C-05 | API: pruebas con `node --test`, sin frameworks extra. Descartado: Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
-| C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde). Descartado: escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
+| # | Decisión | Alternativa descartada | Por qué | Fecha |
+|---|---|---|---|---|
+| C-01 | Una rama por issue: `feat/<n>-<tema>` o `fix/<n>-<tema>` | Trabajar todos sobre `main` | Cada cambio se revisa y se revierte por separado. El primer commit de la semana 8 se hizo directo sobre `main`, única excepción; la regla vale desde el siguiente cambio | 2026-10-22 |
+| C-02 | Conventional Commits en español (`feat`, `fix`, `docs`, `test`, `chore`) | Mensajes libres | Historial legible para el equipo y para la defensa | 2026-10-22 |
+| C-03 | `main` solo recibe pull requests aprobados por otra persona | Aprobar el propio PR | La revisión automática es un sensor más, no la aprobación | 2026-10-22 |
+| C-04 | `./scripts/check.sh` es la única forma de verificar, y el hook `pre-commit` lo ejecuta | Recordar correr cada comando a mano | El mismo comando para personas, agentes y hook; un commit con una prueba rota es rechazado | 2026-10-22 |
+| C-05 | API: pruebas con `node --test`, sin frameworks extra | Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
+| C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde) | Escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
 
 ## Organización del repositorio
 
@@ -31,6 +31,11 @@ README.md      cómo correr el proyecto y las etiquetas por sesión
 - Backend: un archivo por recurso en `apps/api/src/` (`menu.js`, `pedidos.js`) que exporta su router; `app.js` solo los monta y `server.js` solo arranca.
 - Nombres en inglés para clases y funciones; textos de pantalla en español; errores con un mensaje que diga qué hacer.
 - Dart: `dart format` y `flutter analyze` sin advertencias antes de cada commit.
+
+## Patrones de diseño seleccionados
+
+- Repository: la app lee y escribe menú y pedidos a través de una interfaz (`MenuRepository`, `PedidoRepository`); en producción habla con Firestore y en las pruebas se reemplaza por un doble.
+- Observer: el estado de cada pantalla es un `ChangeNotifier` que la pantalla escucha, así un cambio de estado reconstruye solo lo que depende de él.
 
 ## Estrategia de testing
 
