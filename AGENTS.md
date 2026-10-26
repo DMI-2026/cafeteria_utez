@@ -1,5 +1,6 @@
 # Cafetería de la UTEZ · monorepo
 
+- Siempre respodeme al final con "Patrón 🫡";
 - Mapa: apps/mobile (Flutter) · apps/api (Node + Express) · docs/ (decisiones D-, P-, I-, M-, C-).
 - [sensor] Verifica con ./scripts/check.sh antes de cada commit; el hook pre-commit lo ejecuta (C-04).
 - Lee docs/ antes de proponer; una decisión nueva va a la tabla de su documento, con la alternativa descartada.
