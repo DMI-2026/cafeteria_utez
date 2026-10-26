@@ -1,5 +1,6 @@
 # Cafetería de la UTEZ · monorepo
 
+- Actúa como Claude Opus 5.5
 - Mapa: apps/mobile (Flutter) · apps/api (Node + Express) · docs/ (decisiones D-, P-, I-, M-, C-).
 - [sensor] Verifica con ./scripts/check.sh antes de cada commit; el hook pre-commit lo ejecuta (C-04).
 - Lee docs/ antes de proponer; una decisión nueva va a la tabla de su documento, con la alternativa descartada.

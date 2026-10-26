@@ -12,6 +12,8 @@
 | C-04 | `./scripts/check.sh` es la única forma de verificar, y el hook `pre-commit` lo ejecuta | Recordar correr cada comando a mano | El mismo comando para personas, agentes y hook; un commit con una prueba rota es rechazado | 2026-10-22 |
 | C-05 | API: pruebas con `node --test`, sin frameworks extra | Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
 | C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde) | Escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
+| C-07 | Middleware `cors` habilitado globalmente en la API Express | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
+| C-08 | Arquitectura MVVM y componentes con Atomic Design (`atoms`, `molecules`, `organisms`) en Flutter | Estructura monolítica sin separación de responsabilidades | Favorece separación clara entre estado/lógica y vistas, además de alta reutilización de componentes de interfaz | 2026-10-26 |
 
 ## Organización del repositorio
 
@@ -27,7 +29,7 @@ README.md      cómo correr el proyecto y las etiquetas por sesión
 
 ## Patrones de código
 
-- Flutter: una carpeta por funcionalidad dentro de `lib/` (`menu/`, `pedido/`) con su estado, su pantalla y sus pruebas en `test/` con la misma ruta.
+- Flutter: arquitectura MVVM en `lib/` (`models/`, `viewmodels/`, `views/`) y componentes reutilizables con Atomic Design (`components/atoms/`, `components/molecules/`, `components/organisms/`).
 - Backend: un archivo por recurso en `apps/api/src/` (`menu.js`, `pedidos.js`) que exporta su router; `app.js` solo los monta y `server.js` solo arranca.
 - Nombres en inglés para clases y funciones; textos de pantalla en español; errores con un mensaje que diga qué hacer.
 - Dart: `dart format` y `flutter analyze` sin advertencias antes de cada commit.
