@@ -1,132 +1,168 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../core/errors/http_failure.dart';
-import '../core/network/app_http_client.dart';
+import '../components/molecules/encabezado_menu.dart';
+import '../components/molecules/mensaje_estado.dart';
+import '../components/organisms/formulario_producto.dart';
+import '../components/organisms/lista_productos.dart';
+import '../models/producto.dart';
+import '../repositories/menu_repository.dart';
+import '../viewmodels/productos_view_model.dart';
 
-String get defaultBackendBaseUrl {
-  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-    return 'http://10.0.2.2:3000';
-  }
-  return 'http://localhost:3000';
-}
-
+/// Pantalla de inicio: el menú completo con las acciones del CRUD.
 class HomeView extends StatefulWidget {
-  final AppHttpClient? httpClient;
-  final String? baseUrl;
+  final MenuRepository repository;
 
-  const HomeView({super.key, this.httpClient, this.baseUrl});
+  const HomeView({super.key, required this.repository});
 
   @override
   State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
-  late final AppHttpClient _client;
-  late final String _baseUrl;
-
-  bool _loading = true;
-  String? _statusMessage;
-  bool _isConnected = false;
+  late final ProductosViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _client = widget.httpClient ?? AppHttpClient();
-    _baseUrl = widget.baseUrl ?? defaultBackendBaseUrl;
-    _checkBackendConnection();
+    _viewModel = ProductosViewModel(widget.repository);
+    _viewModel.cargar();
   }
 
-  Future<void> _checkBackendConnection() async {
-    setState(() {
-      _loading = true;
-      _statusMessage = null;
-    });
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
 
-    try {
-      final response = await _client.get(Uri.parse('$_baseUrl/health'));
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _isConnected = true;
-          _statusMessage = 'Conectado al backend (${response.body})';
-        });
-      }
-    } on HttpFailure catch (e) {
-      if (mounted) {
-        final message = switch (e) {
-          ConnectionFailure(:final message) => 'Fallo de conexión: $message',
-          ClientFailure(:final statusCode) =>
-            'Error de cliente HTTP ($statusCode)',
-          ServerFailure(:final statusCode) =>
-            'Error en servidor HTTP ($statusCode)',
-          UnknownFailure(:final message) => 'Error desconocido: $message',
-        };
-        setState(() {
-          _loading = false;
-          _isConnected = false;
-          _statusMessage = message;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _loading = false;
-          _isConnected = false;
-          _statusMessage = 'Error inesperado: $e';
-        });
-      }
+  Future<void> _abrirFormulario({Producto? producto}) async {
+    final datos = await FormularioProducto.mostrar(context, producto: producto);
+    if (datos == null || !mounted) return;
+
+    final bool ok;
+    if (producto == null) {
+      ok = await _viewModel.crear(
+        nombre: datos.nombre,
+        precioCentavos: datos.precioCentavos,
+        disponible: datos.disponible,
+      );
+    } else {
+      ok = await _viewModel.actualizar(
+        producto.id,
+        nombre: datos.nombre,
+        precioCentavos: datos.precioCentavos,
+        disponible: datos.disponible,
+      );
     }
+
+    if (!mounted) return;
+    _avisar(
+      ok: ok,
+      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    );
+  }
+
+  Future<void> _confirmarBaja(Producto producto) async {
+    final confirmado = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Dar de baja'),
+        content: Text(
+          '«${producto.nombre}» dejará de estar disponible para pedir. '
+          'Los pedidos anteriores lo conservan (M-04).',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmado != true || !mounted) return;
+
+    final ok = await _viewModel.darDeBaja(producto.id);
+    if (!mounted) return;
+    _avisar(ok: ok, exito: 'Producto dado de baja');
+  }
+
+  Future<void> _reactivar(Producto producto) async {
+    final ok = await _viewModel.reactivar(producto.id);
+    if (!mounted) return;
+    _avisar(ok: ok, exito: 'Producto reactivado');
+  }
+
+  void _avisar({required bool ok, required String exito}) {
+    final mensaje = ok ? exito : (_viewModel.error ?? 'No se pudo guardar');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: ok ? null : Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cafetería UTEZ')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (_loading) ...[
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                const Text('Verificando conexión con el backend...'),
-              ] else ...[
-                Icon(
-                  _isConnected
-                      ? Icons.check_circle_outline
-                      : Icons.error_outline,
-                  color: _isConnected ? Colors.green : Colors.red,
-                  size: 64,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _isConnected
-                      ? 'Conexión Exitosa'
-                      : 'Sin Conexión con Backend',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _statusMessage ?? '',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _isConnected ? Colors.black87 : Colors.red[700],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _checkBackendConnection,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Reintentar conexión'),
-                ),
-              ],
-            ],
-          ),
+      floatingActionButton: FloatingActionButton.extended(
+        tooltip: 'Agregar producto',
+        onPressed: () => _abrirFormulario(),
+        icon: const Icon(Icons.add, size: 22),
+        label: const Text('Agregar'),
+      ),
+      body: ListenableBuilder(
+        listenable: _viewModel,
+        builder: (context, _) => Column(
+          children: [
+            EncabezadoMenu(
+              totalProductos: _viewModel.productos.length,
+              disponibles: _viewModel.productos
+                  .where((producto) => producto.disponible)
+                  .length,
+              cargando: _viewModel.cargando,
+            ),
+            Expanded(child: _contenido()),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _contenido() {
+    if (_viewModel.cargando && _viewModel.productos.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_viewModel.error != null && _viewModel.productos.isEmpty) {
+      return MensajeEstado(
+        icono: Icons.cloud_off,
+        titulo: 'No pudimos cargar el menú',
+        detalle: _viewModel.error!,
+        textoBoton: 'Reintentar',
+        onBoton: _viewModel.cargar,
+      );
+    }
+
+    if (_viewModel.vacio) {
+      return const MensajeEstado(
+        icono: Icons.storefront_outlined,
+        titulo: 'Todavía no hay productos',
+        detalle:
+            'Agrega el primero con el botón +. Lo que agregues se verá aquí '
+            'mismo.',
+      );
+    }
+
+    return ListaProductos(
+      productos: _viewModel.productos,
+      onRefrescar: _viewModel.cargar,
+      onEditar: (producto) => _abrirFormulario(producto: producto),
+      onDarDeBaja: _confirmarBaja,
+      onReactivar: _reactivar,
     );
   }
 }

@@ -1,42 +1,31 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:cafeteria_utez/core/network/app_http_client.dart';
 import 'package:cafeteria_utez/main.dart';
+import 'package:cafeteria_utez/models/producto.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'fakes/fake_menu_repository.dart';
 
 void main() {
-  testWidgets('Muestra estado de conexion exitosa con el backend', (
+  testWidgets('la app arranca en el menú con los productos de la API', (
     tester,
   ) async {
-    final mockClient = MockClient((request) async {
-      return http.Response('{"status":"ok"}', 200);
-    });
-    final client = AppHttpClient(client: mockClient);
+    final repo = FakeMenuRepository(
+      inicial: const [
+        Producto(
+          id: 'p-1',
+          nombre: 'Café americano',
+          precioCentavos: 1800,
+          disponible: true,
+        ),
+      ],
+    );
 
-    await tester.pumpWidget(CafeteriaApp(httpClient: client));
+    await tester.pumpWidget(CafeteriaApp(repository: repo));
     await tester.pumpAndSettle();
 
     expect(find.text('Cafetería UTEZ'), findsOneWidget);
-    expect(find.text('Conexión Exitosa'), findsOneWidget);
-    expect(find.textContaining('Conectado al backend'), findsOneWidget);
+    expect(find.text('Café americano'), findsOneWidget);
+    expect(find.text('\$18.00'), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
   });
-
-  testWidgets(
-    'Muestra mensaje de error cuando falla la conexion con el backend',
-    (tester) async {
-      final mockClient = MockClient((request) async {
-        return http.Response('Internal Error', 500);
-      });
-      final client = AppHttpClient(client: mockClient);
-
-      await tester.pumpWidget(CafeteriaApp(httpClient: client));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Sin Conexión con Backend'), findsOneWidget);
-      expect(
-        find.textContaining('Error en servidor HTTP (500)'),
-        findsOneWidget,
-      );
-    },
-  );
 }
