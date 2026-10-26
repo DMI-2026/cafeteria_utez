@@ -25,7 +25,7 @@ class ListaProductos extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: onRefrescar,
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 8, bottom: 88),
+        padding: const EdgeInsets.only(top: 8, bottom: 96),
         itemCount: productos.length,
         itemBuilder: (context, index) {
           final producto = productos[index];

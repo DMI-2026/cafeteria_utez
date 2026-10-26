@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/format/dinero.dart';
+import '../../core/theme/app_theme.dart';
 import '../../models/producto.dart';
 
 /// Datos capturados en el formulario; el precio ya va en centavos (M-01).
@@ -84,10 +85,10 @@ class _FormularioProductoState extends State<FormularioProducto> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.sm,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
       ),
       child: Form(
         key: _formKey,
@@ -96,11 +97,29 @@ class _FormularioProductoState extends State<FormularioProducto> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.borde,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 _esEdicion ? 'Editar producto' : 'Nuevo producto',
-                style: Theme.of(context).textTheme.titleLarge,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
+              Text(
+                _esEdicion
+                    ? 'Cambia lo que necesites; el precio se guarda en centavos.'
+                    : 'El precio se escribe en pesos, por ejemplo 12.50.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.lg),
               TextFormField(
                 key: const Key('campo-nombre'),
                 controller: _nombre,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/format/dinero.dart';
+import '../../core/theme/app_theme.dart';
 
 /// Precio de un producto en pesos, siempre a partir de centavos (M-01).
 class PrecioTexto extends StatelessWidget {
@@ -13,9 +14,12 @@ class PrecioTexto extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       formatPrecio(centavos),
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-        color: tenue ? Colors.grey : Theme.of(context).colorScheme.primary,
+      style: TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.2,
+        color: tenue ? AppColors.agotado : AppColors.espresso,
+        decoration: tenue ? TextDecoration.lineThrough : null,
       ),
     );
   }

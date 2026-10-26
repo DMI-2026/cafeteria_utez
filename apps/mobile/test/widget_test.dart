@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/main.dart';
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_menu_repository.dart';
@@ -25,5 +26,6 @@ void main() {
     expect(find.text('Cafetería UTEZ'), findsOneWidget);
     expect(find.text('Café americano'), findsOneWidget);
     expect(find.text('\$18.00'), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/network/app_http_client.dart';
 import 'core/network/backend_config.dart';
+import 'core/theme/app_theme.dart';
 import 'repositories/menu_repository.dart';
 import 'views/home_view.dart';
 
@@ -26,10 +27,7 @@ class CafeteriaApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Cafetería UTEZ',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: HomeView(repository: menuRepository),
     );
   }

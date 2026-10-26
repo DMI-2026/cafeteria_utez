@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Etiqueta que dice si un producto se puede pedir.
+import '../../core/theme/app_theme.dart';
+
+/// Etiqueta tipo píldora que dice si un producto se puede pedir.
 class BadgeDisponible extends StatelessWidget {
   final bool disponible;
 
@@ -8,22 +10,34 @@ class BadgeDisponible extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = disponible ? Colors.green.shade800 : Colors.grey.shade700;
-    final fondo = disponible ? Colors.green.shade50 : Colors.grey.shade200;
+    final color = disponible ? AppColors.verde : AppColors.agotado;
+    final fondo = disponible ? AppColors.verdeSuave : AppColors.agotadoSuave;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: fondo,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
-      child: Text(
-        disponible ? 'Disponible' : 'Agotado',
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            disponible ? 'Disponible' : 'Agotado',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.1,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

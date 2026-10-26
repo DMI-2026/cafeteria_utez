@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../components/molecules/encabezado_menu.dart';
 import '../components/molecules/mensaje_estado.dart';
 import '../components/organisms/formulario_producto.dart';
 import '../components/organisms/lista_productos.dart';
@@ -107,49 +108,61 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Cafetería UTEZ')),
       floatingActionButton: FloatingActionButton.extended(
         tooltip: 'Agregar producto',
         onPressed: () => _abrirFormulario(),
-        icon: const Icon(Icons.add),
-        label: const Text('Producto'),
+        icon: const Icon(Icons.add, size: 22),
+        label: const Text('Agregar'),
       ),
       body: ListenableBuilder(
         listenable: _viewModel,
-        builder: (context, _) {
-          if (_viewModel.cargando && _viewModel.productos.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (_viewModel.error != null && _viewModel.productos.isEmpty) {
-            return MensajeEstado(
-              icono: Icons.cloud_off,
-              titulo: 'No pudimos cargar el menú',
-              detalle: _viewModel.error!,
-              textoBoton: 'Reintentar',
-              onBoton: _viewModel.cargar,
-            );
-          }
-
-          if (_viewModel.vacio) {
-            return const MensajeEstado(
-              icono: Icons.storefront_outlined,
-              titulo: 'Todavía no hay productos',
-              detalle:
-                  'Agrega el primero con el botón +. Lo que agregues se verá '
-                  'aquí mismo.',
-            );
-          }
-
-          return ListaProductos(
-            productos: _viewModel.productos,
-            onRefrescar: _viewModel.cargar,
-            onEditar: (producto) => _abrirFormulario(producto: producto),
-            onDarDeBaja: _confirmarBaja,
-            onReactivar: _reactivar,
-          );
-        },
+        builder: (context, _) => Column(
+          children: [
+            EncabezadoMenu(
+              totalProductos: _viewModel.productos.length,
+              disponibles: _viewModel.productos
+                  .where((producto) => producto.disponible)
+                  .length,
+              cargando: _viewModel.cargando,
+            ),
+            Expanded(child: _contenido()),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _contenido() {
+    if (_viewModel.cargando && _viewModel.productos.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_viewModel.error != null && _viewModel.productos.isEmpty) {
+      return MensajeEstado(
+        icono: Icons.cloud_off,
+        titulo: 'No pudimos cargar el menú',
+        detalle: _viewModel.error!,
+        textoBoton: 'Reintentar',
+        onBoton: _viewModel.cargar,
+      );
+    }
+
+    if (_viewModel.vacio) {
+      return const MensajeEstado(
+        icono: Icons.storefront_outlined,
+        titulo: 'Todavía no hay productos',
+        detalle:
+            'Agrega el primero con el botón +. Lo que agregues se verá aquí '
+            'mismo.',
+      );
+    }
+
+    return ListaProductos(
+      productos: _viewModel.productos,
+      onRefrescar: _viewModel.cargar,
+      onEditar: (producto) => _abrirFormulario(producto: producto),
+      onDarDeBaja: _confirmarBaja,
+      onReactivar: _reactivar,
     );
   }
 }

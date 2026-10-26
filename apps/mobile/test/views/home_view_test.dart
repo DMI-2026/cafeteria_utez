@@ -44,6 +44,15 @@ void main() {
 
     expect(find.byType(ListView), findsNothing);
     expect(find.textContaining('Todavía no hay productos'), findsOneWidget);
+    expect(find.text('Menú vacío · agrega el primer producto'), findsOneWidget);
+  });
+
+  testWidgets('el encabezado resume cuántos productos hay', (tester) async {
+    await montar(tester, FakeMenuRepository(inicial: [cafe, pan]));
+
+    expect(find.text('Cafetería UTEZ'), findsOneWidget);
+    expect(find.text('2 productos · 1 disponible'), findsOneWidget);
+    expect(find.byType(AppBar), findsNothing);
   });
 
   testWidgets('un producto agotado se muestra en gris con su badge', (
