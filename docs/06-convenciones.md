@@ -15,6 +15,7 @@
 | C-07 | Middleware `cors` habilitado globalmente en la API Express | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
 | C-08 | Arquitectura MVVM y componentes con Atomic Design (`atoms`, `molecules`, `organisms`) en Flutter | Estructura monolítica sin separación de responsabilidades | Favorece separación clara entre estado/lógica y vistas, además de alta reutilización de componentes de interfaz | 2026-10-26 |
 | C-09 | Padrón y control de cambios formalizado en `CONTRIBUIDORES.md` para la organización DMI-2026 | Dejar directrices dispersas en AGENTS/README o sin padrón explícito | Mapea con certeza a los 31 miembros de DMI-2026 y establece las reglas de ramas, commits y PRs para el control de cambios | 2026-10-26 |
+| C-10 | Cliente HTTP centralizado en `lib/core/` con `http` oficial, soporte Bearer token y errores sellados (`HttpFailure`) | Llamadas dispersas con `http` directo o excepciones genéricas no tipadas | Estandariza timeouts, encabezados de autenticación, esquemas `http`/`https` y permite pattern matching exhaustivo al capturar fallos de red y servidor | 2026-10-26 |
 
 ## Organización del repositorio
 
@@ -31,7 +32,7 @@ README.md          cómo correr el proyecto y las etiquetas por sesión
 
 ## Patrones de código
 
-- Flutter: arquitectura MVVM en `lib/` (`models/`, `viewmodels/`, `views/`) y componentes reutilizables con Atomic Design (`components/atoms/`, `components/molecules/`, `components/organisms/`).
+- Flutter: arquitectura MVVM en `lib/` (`models/`, `viewmodels/`, `views/`), capa `core/` (`network/`, `errors/`) y componentes reutilizables con Atomic Design (`components/atoms/`, `components/molecules/`, `components/organisms/`).
 - Backend: un archivo por recurso en `apps/api/src/` (`menu.js`, `pedidos.js`) que exporta su router; `app.js` solo los monta y `server.js` solo arranca.
 - Nombres en inglés para clases y funciones; textos de pantalla en español; errores con un mensaje que diga qué hacer.
 - Dart: `dart format` y `flutter analyze` sin advertencias antes de cada commit.
