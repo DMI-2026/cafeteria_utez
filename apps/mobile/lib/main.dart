@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core/network/app_http_client.dart';
 import 'views/home_view.dart';
 
 void main() {
@@ -7,10 +8,19 @@ void main() {
 }
 
 class CafeteriaApp extends StatelessWidget {
-  const CafeteriaApp({super.key});
+  final AppHttpClient? httpClient;
+
+  const CafeteriaApp({super.key, this.httpClient});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(title: 'Cafetería UTEZ', home: HomeView());
+    return MaterialApp(
+      title: 'Cafetería UTEZ',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        useMaterial3: true,
+      ),
+      home: HomeView(httpClient: httpClient),
+    );
   }
 }
