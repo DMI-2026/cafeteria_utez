@@ -12,6 +12,7 @@
 | C-04 | `./scripts/check.sh` es la única forma de verificar, y el hook `pre-commit` lo ejecuta | Recordar correr cada comando a mano | El mismo comando para personas, agentes y hook; un commit con una prueba rota es rechazado | 2026-10-22 |
 | C-05 | API: pruebas con `node --test`, sin frameworks extra | Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
 | C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde) | Escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
+| C-07 | Middleware `cors` habilitado globalmente en la API Express | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
 
 ## Organización del repositorio
 
