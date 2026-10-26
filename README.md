@@ -11,6 +11,7 @@ Proyecto de clase de Desarrollo Móvil Integral (10.º cuatrimestre, DATID, UTEZ
 | `apps/mobile/` | App Flutter (`cafeteria_utez`, org `mx.edu.utez`) |
 | `apps/api/` | API Node + Express con `GET /health` (ver su `README.md`) |
 | `docs/` | `01-alcance.md` (SOW), `02-prd.md`, `03-integraciones.md`, `05-datos.md`, `06-convenciones.md`; `04-arquitectura.md` se omite y el SOW dice por qué |
+| `CONTRIBUIDORES.md` | Padrón de integrantes de DMI-2026 y directrices para control de cambios |
 | `AGENTS.md` | Reglas para cualquier persona o agente |
 | `scripts/check.sh` y `.githooks/` | El sensor: verifica todo con un comando y el hook lo ejecuta |
 

@@ -14,17 +14,19 @@
 | C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde) | Escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
 | C-07 | Middleware `cors` habilitado globalmente en la API Express | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
 | C-08 | Arquitectura MVVM y componentes con Atomic Design (`atoms`, `molecules`, `organisms`) en Flutter | Estructura monolítica sin separación de responsabilidades | Favorece separación clara entre estado/lógica y vistas, además de alta reutilización de componentes de interfaz | 2026-10-26 |
+| C-09 | Padrón y control de cambios formalizado en `CONTRIBUIDORES.md` para la organización DMI-2026 | Dejar directrices dispersas en AGENTS/README o sin padrón explícito | Mapea con certeza a los 31 miembros de DMI-2026 y establece las reglas de ramas, commits y PRs para el control de cambios | 2026-10-26 |
 
 ## Organización del repositorio
 
 ```text
-apps/mobile/   app Flutter (cafeteria_utez, org mx.edu.utez)
-apps/api/      API Node + Express (src/, test/)
-docs/          alcance, PRD, integraciones, modelo de datos y convenciones
-scripts/       check.sh, el sensor que verifica todo
-.githooks/     hooks versionados (pre-commit corre check.sh)
-AGENTS.md      reglas para cualquier persona o agente
-README.md      cómo correr el proyecto y las etiquetas por sesión
+apps/mobile/       app Flutter (cafeteria_utez, org mx.edu.utez)
+apps/api/          API Node + Express (src/, test/)
+docs/              alcance, PRD, integraciones, modelo de datos y convenciones
+CONTRIBUIDORES.md  padrón de integrantes y directrices de control de cambios
+scripts/           check.sh, el sensor que verifica todo
+.githooks/         hooks versionados (pre-commit corre check.sh)
+AGENTS.md          reglas para cualquier persona o agente
+README.md          cómo correr el proyecto y las etiquetas por sesión
 ```
 
 ## Patrones de código
