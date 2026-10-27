@@ -128,3 +128,125 @@ describe('CRUD /productos', () => {
     assert.equal(obtenido.disponible, false);
   });
 });
+
+describe('descripcion en /productos', () => {
+  let server;
+  let baseUrl;
+
+  beforeEach((t) => {
+    server = app.listen(0);
+    const { port } = server.address();
+    baseUrl = `http://localhost:${port}`;
+    t.after(() => server.close());
+  });
+
+  const enviar = (metodo, ruta, cuerpo) =>
+    fetch(`${baseUrl}${ruta}`, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+  const crear = async (extra = {}) => {
+    const res = await enviar('POST', '/productos', { nombre: 'Concha', precio_centavos: 1500, ...extra });
+    return res.json();
+  };
+
+  test('POST sin descripcion la guarda como ""', async () => {
+    const res = await enviar('POST', '/productos', { nombre: 'Torta', precio_centavos: 4000 });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion, '');
+  });
+
+  test('POST guarda la descripcion sin espacios sobrantes', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Café de olla',
+      precio_centavos: 3000,
+      descripcion: '  Café de grano de Morelos  ',
+    });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion, 'Café de grano de Morelos');
+  });
+
+  for (const invalida of [123, null, { texto: 'hola' }, ['hola']]) {
+    test(`POST rechaza descripcion que no es texto (${JSON.stringify(invalida)})`, async () => {
+      const res = await enviar('POST', '/productos', {
+        nombre: 'Jugo',
+        precio_centavos: 2500,
+        descripcion: invalida,
+      });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.match(body.error, /descripcion/);
+    });
+  }
+
+  test('POST acepta descripcion de exactamente 200 caracteres', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Molletes',
+      precio_centavos: 3500,
+      descripcion: 'a'.repeat(200),
+    });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion.length, 200);
+  });
+
+  test('POST rechaza descripcion de más de 200 caracteres', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Chilaquiles',
+      precio_centavos: 5000,
+      descripcion: 'a'.repeat(201),
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /200/);
+  });
+
+  test('POST cuenta los 200 caracteres sin los espacios sobrantes', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Enchiladas',
+      precio_centavos: 5500,
+      descripcion: `  ${'a'.repeat(200)}  `,
+    });
+    assert.equal(res.status, 201);
+  });
+
+  test('PUT actualiza la descripcion sin espacios sobrantes', async () => {
+    const producto = await crear();
+    const res = await enviar('PUT', `/productos/${producto.id}`, { descripcion: '  Pan dulce de vainilla ' });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.descripcion, 'Pan dulce de vainilla');
+  });
+
+  test('PUT sin descripcion conserva la que ya tenía', async () => {
+    const producto = await crear({ descripcion: 'Recién horneada' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { precio_centavos: 1800 });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.descripcion, 'Recién horneada');
+  });
+
+  test('PUT rechaza descripcion que no es texto y no cambia el producto', async () => {
+    const producto = await crear({ descripcion: 'Original' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { nombre: 'Otro nombre', descripcion: 42 });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /descripcion/);
+
+    const actual = await (await fetch(`${baseUrl}/productos/${producto.id}`)).json();
+    assert.equal(actual.nombre, producto.nombre);
+    assert.equal(actual.descripcion, 'Original');
+  });
+
+  test('PUT rechaza descripcion de más de 200 caracteres', async () => {
+    const producto = await crear();
+    const res = await enviar('PUT', `/productos/${producto.id}`, { descripcion: 'a'.repeat(201) });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /200/);
+  });
+});
