@@ -6,6 +6,20 @@ const router = Router();
 // Almacén en memoria de productos
 const productos = [];
 
+const DESCRIPCION_MAX = 200;
+
+// Devuelve { valor } con la descripción limpia o { error } si no es válida (contrato de #5)
+function validarDescripcion(descripcion) {
+  if (typeof descripcion !== 'string') {
+    return { error: 'El campo "descripcion" debe ser texto' };
+  }
+  const limpia = descripcion.trim();
+  if (limpia.length > DESCRIPCION_MAX) {
+    return { error: `El campo "descripcion" no puede pasar de ${DESCRIPCION_MAX} caracteres` };
+  }
+  return { valor: limpia };
+}
+
 // GET /productos
 router.get('/', (req, res) => {
   const { disponible } = req.query;
@@ -27,7 +41,7 @@ router.get('/:id', (req, res) => {
 
 // POST /productos
 router.post('/', (req, res) => {
-  const { nombre, precio_centavos, disponible } = req.body;
+  const { nombre, precio_centavos, disponible, descripcion = '' } = req.body;
 
   if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
@@ -44,9 +58,15 @@ router.post('/', (req, res) => {
     });
   }
 
+  const desc = validarDescripcion(descripcion);
+  if (desc.error) {
+    return res.status(400).json({ error: desc.error });
+  }
+
   const nuevoProducto = {
     id: randomUUID(),
     nombre: nombre.trim(),
+    descripcion: desc.valor,
     precio_centavos,
     disponible: disponible !== undefined ? Boolean(disponible) : true,
   };
@@ -62,7 +82,16 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Producto no encontrado' });
   }
 
-  const { nombre, precio_centavos, disponible } = req.body;
+  const { nombre, precio_centavos, disponible, descripcion } = req.body;
+
+  // Se valida antes de modificar nada para no dejar cambios a medias
+  let desc;
+  if (descripcion !== undefined) {
+    desc = validarDescripcion(descripcion);
+    if (desc.error) {
+      return res.status(400).json({ error: desc.error });
+    }
+  }
 
   if (nombre !== undefined) {
     if (typeof nombre !== 'string' || nombre.trim() === '') {
@@ -78,6 +107,10 @@ router.put('/:id', (req, res) => {
       });
     }
     productos[index].precio_centavos = precio_centavos;
+  }
+
+  if (desc) {
+    productos[index].descripcion = desc.valor;
   }
 
   if (disponible !== undefined) {
