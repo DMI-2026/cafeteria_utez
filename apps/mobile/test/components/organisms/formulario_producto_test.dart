@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/components/organisms/formulario_producto.dart';
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:cafeteria_utez/models/tipo_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -65,7 +66,7 @@ void main() {
         precioCentavos: 2500,
         disponible: true,
         descripcion: 'Café con canela y piloncillo',
-        tipo: 'bebida_caliente',
+        tipo: TipoProducto.bebidaCaliente,
       );
 
       await abrir(tester, producto: producto);
@@ -113,7 +114,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(resultado?.descripcion, 'Fría, bien de hielo');
-      expect(resultado?.tipo, 'bebida_fria');
+      expect(resultado?.tipo, TipoProducto.bebidaFria);
     });
 
     testWidgets('por defecto el tipo es alimento y la descripcion vacía', (
@@ -142,7 +143,7 @@ void main() {
       await tester.tap(find.text('Guardar'));
       await tester.pumpAndSettle();
 
-      expect(resultado?.tipo, 'alimento');
+      expect(resultado?.tipo, TipoProducto.alimento);
       expect(resultado?.descripcion, '');
     });
   });

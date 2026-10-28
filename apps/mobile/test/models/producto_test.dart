@@ -1,4 +1,5 @@
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:cafeteria_utez/models/tipo_producto.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -15,7 +16,7 @@ void main() {
 
       expect(producto.id, 'p-1');
       expect(producto.descripcion, 'Café de grano de Morelos');
-      expect(producto.tipo, 'bebida_caliente');
+      expect(producto.tipo, TipoProducto.bebidaCaliente);
       expect(producto.nombre, 'Café americano');
       expect(producto.precioCentavos, 1800);
       expect(producto.disponible, isTrue);
@@ -41,7 +42,7 @@ void main() {
         });
 
         expect(producto.descripcion, '');
-        expect(producto.tipo, 'alimento');
+        expect(producto.tipo, TipoProducto.alimento);
       },
     );
 
@@ -52,7 +53,7 @@ void main() {
         precioCentavos: 4500,
         disponible: false,
         descripcion: 'Con pollo y crema',
-        tipo: 'alimento',
+        tipo: TipoProducto.alimento,
       );
 
       expect(producto.toJson(), {
@@ -86,21 +87,67 @@ void main() {
         precioCentavos: 3000,
         disponible: true,
         descripcion: 'Con chocolate',
-        tipo: 'bebida_caliente',
+        tipo: TipoProducto.bebidaCaliente,
       );
 
       expect(
         producto.copyWith(precioCentavos: 3200).descripcion,
         'Con chocolate',
       );
-      expect(producto.copyWith(precioCentavos: 3200).tipo, 'bebida_caliente');
+      expect(
+        producto.copyWith(precioCentavos: 3200).tipo,
+        TipoProducto.bebidaCaliente,
+      );
 
       final fria = producto.copyWith(
-        tipo: 'bebida_fria',
+        tipo: TipoProducto.bebidaFria,
         descripcion: 'Frappé',
       );
-      expect(fria.tipo, 'bebida_fria');
+      expect(fria.tipo, TipoProducto.bebidaFria);
       expect(fria.descripcion, 'Frappé');
+    });
+
+    test('toJson manda el tipo con el texto del contrato', () {
+      const producto = Producto(
+        id: 'p-7',
+        nombre: 'Frappé de moka',
+        precioCentavos: 4500,
+        disponible: true,
+        tipo: TipoProducto.bebidaFria,
+      );
+
+      expect(producto.toJson()['tipo'], 'bebida_fria');
+    });
+
+    test('fromJson con un tipo desconocido usa alimento', () {
+      final producto = Producto.fromJson({
+        'id': 'p-8',
+        'nombre': 'Combo',
+        'precio_centavos': 6000,
+        'tipo': 'postre',
+      });
+
+      expect(producto.tipo, TipoProducto.alimento);
+    });
+  });
+
+  group('TipoProducto', () {
+    test('fromJson y json van y vienen con los 3 valores del contrato', () {
+      expect(TipoProducto.fromJson('alimento'), TipoProducto.alimento);
+      expect(
+        TipoProducto.fromJson('bebida_caliente'),
+        TipoProducto.bebidaCaliente,
+      );
+      expect(TipoProducto.fromJson('bebida_fria'), TipoProducto.bebidaFria);
+      expect(TipoProducto.values.map((t) => t.json), [
+        'alimento',
+        'bebida_caliente',
+        'bebida_fria',
+      ]);
+    });
+
+    test('fromJson sin valor usa alimento', () {
+      expect(TipoProducto.fromJson(null), TipoProducto.alimento);
     });
   });
 }

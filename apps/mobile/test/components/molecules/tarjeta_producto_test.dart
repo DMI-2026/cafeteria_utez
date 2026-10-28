@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/components/molecules/tarjeta_producto.dart';
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:cafeteria_utez/models/tipo_producto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -20,7 +21,10 @@ void main() {
       );
     }
 
-    Producto producto({String descripcion = '', String tipo = 'alimento'}) {
+    Producto producto({
+      String descripcion = '',
+      TipoProducto tipo = TipoProducto.alimento,
+    }) {
       return Producto(
         id: 'p-1',
         nombre: 'Café americano',
@@ -50,7 +54,7 @@ void main() {
     testWidgets('una bebida caliente muestra ícono y texto "Caliente"', (
       tester,
     ) async {
-      await mostrar(tester, producto(tipo: 'bebida_caliente'));
+      await mostrar(tester, producto(tipo: TipoProducto.bebidaCaliente));
 
       final indicador = find.byKey(const Key('indicador-temperatura'));
       expect(indicador, findsOneWidget);
@@ -65,7 +69,7 @@ void main() {
     });
 
     testWidgets('una bebida fría muestra ícono y texto "Fría"', (tester) async {
-      await mostrar(tester, producto(tipo: 'bebida_fria'));
+      await mostrar(tester, producto(tipo: TipoProducto.bebidaFria));
 
       final indicador = find.byKey(const Key('indicador-temperatura'));
       expect(indicador, findsOneWidget);
@@ -80,7 +84,7 @@ void main() {
     });
 
     testWidgets('caliente y fría usan íconos distintos', (tester) async {
-      await mostrar(tester, producto(tipo: 'bebida_caliente'));
+      await mostrar(tester, producto(tipo: TipoProducto.bebidaCaliente));
       final caliente = tester
           .widget<Icon>(
             find.descendant(
@@ -90,7 +94,7 @@ void main() {
           )
           .icon;
 
-      await mostrar(tester, producto(tipo: 'bebida_fria'));
+      await mostrar(tester, producto(tipo: TipoProducto.bebidaFria));
       final fria = tester
           .widget<Icon>(
             find.descendant(

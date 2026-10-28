@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../models/tipo_producto.dart';
 
 /// Indica si una bebida es caliente o fría, con ícono y texto (no solo color).
 ///
-/// Un alimento, o cualquier otro tipo, no muestra nada.
+/// Un alimento no muestra nada.
 class BadgeTemperatura extends StatelessWidget {
-  final String tipo;
+  final TipoProducto tipo;
 
   const BadgeTemperatura({super.key, required this.tipo});
 
   @override
   Widget build(BuildContext context) {
-    final caliente = tipo == 'bebida_caliente';
-    if (!caliente && tipo != 'bebida_fria') return const SizedBox.shrink();
+    if (tipo == TipoProducto.alimento) return const SizedBox.shrink();
+    final caliente = tipo == TipoProducto.bebidaCaliente;
 
     final color = caliente ? AppColors.terracota : AppColors.espressoSuave;
     final fondo = caliente ? AppColors.terracotaSuave : AppColors.crema;

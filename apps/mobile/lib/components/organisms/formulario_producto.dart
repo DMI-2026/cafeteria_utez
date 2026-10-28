@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/format/dinero.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/producto.dart';
+import '../../models/tipo_producto.dart';
 
 /// Datos capturados en el formulario; el precio ya va en centavos (M-01).
 class ProductoFormData {
@@ -11,7 +12,7 @@ class ProductoFormData {
   final int precioCentavos;
   final bool disponible;
   final String descripcion;
-  final String tipo;
+  final TipoProducto tipo;
 
   const ProductoFormData({
     required this.nombre,
@@ -24,13 +25,13 @@ class ProductoFormData {
 
 /// Opciones del selector de tipo (M-06 · contrato de #5).
 const _tiposDisponibles = <_OpcionTipo>[
-  _OpcionTipo('alimento', 'Alimento'),
-  _OpcionTipo('bebida_caliente', 'Bebida caliente'),
-  _OpcionTipo('bebida_fria', 'Bebida fría'),
+  _OpcionTipo(TipoProducto.alimento, 'Alimento'),
+  _OpcionTipo(TipoProducto.bebidaCaliente, 'Bebida caliente'),
+  _OpcionTipo(TipoProducto.bebidaFria, 'Bebida fría'),
 ];
 
 class _OpcionTipo {
-  final String valor;
+  final TipoProducto valor;
   final String etiqueta;
   const _OpcionTipo(this.valor, this.etiqueta);
 }
@@ -63,7 +64,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
   late final TextEditingController _precio;
   late final TextEditingController _descripcion;
   late bool _disponible;
-  late String _tipo;
+  late TipoProducto _tipo;
 
   bool get _esEdicion => widget.producto != null;
 
@@ -79,7 +80,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
     );
     _descripcion = TextEditingController(text: producto?.descripcion ?? '');
     _disponible = producto?.disponible ?? true;
-    _tipo = producto?.tipo ?? 'alimento';
+    _tipo = producto?.tipo ?? TipoProducto.alimento;
   }
 
   @override
@@ -200,7 +201,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 ),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<TipoProducto>(
                 key: const Key('campo-tipo'),
                 initialValue: _tipo,
                 decoration: const InputDecoration(
@@ -209,7 +210,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 ),
                 items: [
                   for (final opcion in _tiposDisponibles)
-                    DropdownMenuItem<String>(
+                    DropdownMenuItem<TipoProducto>(
                       value: opcion.valor,
                       child: Text(opcion.etiqueta),
                     ),

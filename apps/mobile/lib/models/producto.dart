@@ -1,3 +1,5 @@
+import 'tipo_producto.dart';
+
 /// Un producto del menú de la cafetería.
 ///
 /// El precio viaja y se guarda en centavos enteros (M-01).
@@ -7,7 +9,7 @@ class Producto {
   final int precioCentavos;
   final bool disponible;
   final String descripcion;
-  final String tipo;
+  final TipoProducto tipo;
 
   const Producto({
     required this.id,
@@ -15,7 +17,7 @@ class Producto {
     required this.precioCentavos,
     required this.disponible,
     this.descripcion = '',
-    this.tipo = 'alimento',
+    this.tipo = TipoProducto.alimento,
   });
 
   factory Producto.fromJson(Map<String, dynamic> json) {
@@ -25,7 +27,7 @@ class Producto {
       precioCentavos: (json['precio_centavos'] as num).toInt(),
       disponible: json['disponible'] as bool? ?? true,
       descripcion: json['descripcion'] as String? ?? '',
-      tipo: json['tipo'] as String? ?? 'alimento',
+      tipo: TipoProducto.fromJson(json['tipo'] as String?),
     );
   }
 
@@ -33,7 +35,7 @@ class Producto {
     return {
       'nombre': nombre,
       'descripcion': descripcion,
-      'tipo': tipo,
+      'tipo': tipo.json,
       'precio_centavos': precioCentavos,
       'disponible': disponible,
     };
@@ -44,7 +46,7 @@ class Producto {
     int? precioCentavos,
     bool? disponible,
     String? descripcion,
-    String? tipo,
+    TipoProducto? tipo,
   }) {
     return Producto(
       id: id,
