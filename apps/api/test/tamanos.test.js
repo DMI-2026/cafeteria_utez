@@ -1,6 +1,6 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert/strict');
-const { validarTamanos } = require('../src/tamanos');
+const { validarTamanos, ordenarTamanos } = require('../src/tamanos');
 
 describe('validarTamanos', () => {
   describe('estructura del arreglo', () => {
@@ -100,6 +100,44 @@ describe('validarTamanos', () => {
         { tamano: 'xl', precio_centavos: 4400 },
       ];
       assert.equal(validarTamanos(lista), null);
+    });
+  });
+
+  describe('tamanos sin repetidos y ordenados', () => {
+    test('rechaza tamanos repetidos', () => {
+      assert.match(
+        validarTamanos([
+          { tamano: 'ch', precio_centavos: 2500 },
+          { tamano: 'ch', precio_centavos: 3000 },
+        ]),
+        /repetidos/i,
+      );
+
+      assert.match(
+        validarTamanos([
+          { tamano: 'g', precio_centavos: 3800 },
+          { tamano: 'ch', precio_centavos: 2500 },
+          { tamano: 'g', precio_centavos: 4000 },
+        ]),
+        /repetidos/i,
+      );
+    });
+
+    test('ordena la lista de ch a xl sin importar el orden de entrada', () => {
+      const lista = [
+        { tamano: 'xl', precio_centavos: 4500 },
+        { tamano: 'ch', precio_centavos: 2500 },
+        { tamano: 'g', precio_centavos: 3800 },
+        { tamano: 'md', precio_centavos: 3200 },
+      ];
+
+      assert.equal(validarTamanos(lista), null);
+      assert.deepEqual(ordenarTamanos(lista), [
+        { tamano: 'ch', precio_centavos: 2500 },
+        { tamano: 'md', precio_centavos: 3200 },
+        { tamano: 'g', precio_centavos: 3800 },
+        { tamano: 'xl', precio_centavos: 4500 },
+      ]);
     });
   });
 });

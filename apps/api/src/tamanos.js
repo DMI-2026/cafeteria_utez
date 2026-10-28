@@ -1,5 +1,15 @@
 const TAMANOS_VALIDOS = ['ch', 'md', 'g', 'xl'];
 
+function ordenarTamanos(tamanos) {
+  if (!Array.isArray(tamanos)) {
+    return [];
+  }
+
+  return [...tamanos].sort(
+    (a, b) => TAMANOS_VALIDOS.indexOf(a.tamano) - TAMANOS_VALIDOS.indexOf(b.tamano),
+  );
+}
+
 /**
  * Valida la estructura y forma de los elementos en el arreglo de tamaños.
  * Contrato fijado en issue #5 e issue #28 (team-4).
@@ -11,6 +21,8 @@ function validarTamanos(tamanos) {
   if (!Array.isArray(tamanos)) {
     return 'El campo "tamanos" debe ser un arreglo';
   }
+
+  const vistos = new Set();
 
   for (const item of tamanos) {
     if (typeof item !== 'object' || item === null || Array.isArray(item)) {
@@ -29,6 +41,11 @@ function validarTamanos(tamanos) {
     ) {
       return 'El campo "precio_centavos" de cada tamaño es obligatorio y debe ser un número entero mayor o igual a 0 (M-01)';
     }
+
+    if (vistos.has(item.tamano)) {
+      return 'No se permiten tamaños repetidos';
+    }
+    vistos.add(item.tamano);
   }
 
   return null;
@@ -36,5 +53,6 @@ function validarTamanos(tamanos) {
 
 module.exports = {
   validarTamanos,
+  ordenarTamanos,
   TAMANOS_VALIDOS,
 };
