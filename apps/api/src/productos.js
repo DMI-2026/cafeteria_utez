@@ -1,17 +1,25 @@
 const { Router } = require('express');
 const { randomUUID } = require('node:crypto');
 
-const normalizarNombre = (nombre) =>
-  nombre
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-
 const router = Router();
 
 // Almacén en memoria de productos
 const productos = [];
+
+const normalizarNombre = (nombre) =>
+  nombre
+    .trim()
+    .replace(/\s+/g, ' ')
+    .normalize('NFD')
+    .replace(/n\u0303/gi, 'ñ') // la ñ es letra propia, no una n con acento (M-05)
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+
+const buscarProductoDuplicado = (nombre, idExcluido) =>
+  productos.find(
+    (producto) =>
+      producto.id !== idExcluido && normalizarNombre(producto.nombre) === normalizarNombre(nombre),
+  );
 
 // GET /productos
 router.get('/', (req, res) => {
@@ -40,8 +48,6 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
   }
 
-  const nombreNormalizado = normalizarNombre(nombre);
-
   if (
     precio_centavos === undefined ||
     typeof precio_centavos !== 'number' ||
@@ -53,12 +59,12 @@ router.post('/', (req, res) => {
     });
   }
 
-  const nombreExistente = productos.find(
-    (p) => normalizarNombre(p.nombre) === nombreNormalizado
-  );
-
-  if (nombreExistente) {
-    return res.status(409).json({ error: 'Ya existe un producto con ese nombre', id: nombreExistente.id });
+  const existente = buscarProductoDuplicado(nombre);
+  if (existente) {
+    return res.status(409).json({
+      error: 'Ya existe un producto con ese nombre',
+      id: existente.id,
+    });
   }
 
   const nuevoProducto = {
@@ -85,6 +91,15 @@ router.put('/:id', (req, res) => {
     if (typeof nombre !== 'string' || nombre.trim() === '') {
       return res.status(400).json({ error: 'El campo "nombre" debe ser una cadena no vacía' });
     }
+
+    const existente = buscarProductoDuplicado(nombre, productos[index].id);
+    if (existente) {
+      return res.status(409).json({
+        error: 'Ya existe un producto con ese nombre',
+        id: existente.id,
+      });
+    }
+
     productos[index].nombre = nombre.trim();
   }
 
