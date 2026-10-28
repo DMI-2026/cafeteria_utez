@@ -6,6 +6,21 @@ const router = Router();
 // Almacén en memoria de productos
 const productos = [];
 
+const normalizarNombre = (nombre) =>
+  nombre
+    .trim()
+    .replace(/\s+/g, ' ')
+    .normalize('NFD')
+    .replace(/n\u0303/gi, 'ñ') // la ñ es letra propia, no una n con acento (M-05)
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+
+const buscarProductoDuplicado = (nombre, idExcluido) =>
+  productos.find(
+    (producto) =>
+      producto.id !== idExcluido && normalizarNombre(producto.nombre) === normalizarNombre(nombre),
+  );
+
 // GET /productos
 router.get('/', (req, res) => {
   const { disponible } = req.query;
@@ -33,16 +48,6 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
   }
 
-  const nombreNormalizado = nombre.trim().toLowerCase();
-  const existente = productos.find((p) => p.nombre.toLowerCase() === nombreNormalizado);
-
-  if (existente) {
-    return res.status(409).json({
-      error: `Ya existe un producto con ese nombre. Reactiva el existente (ID: ${existente.id}) en lugar de crear otro`,
-      id: existente.id,
-    });
-  }
-
   if (
     precio_centavos === undefined ||
     typeof precio_centavos !== 'number' ||
@@ -51,6 +56,14 @@ router.post('/', (req, res) => {
   ) {
     return res.status(400).json({
       error: 'El campo "precio_centavos" es obligatorio, debe ser un número entero mayor o igual a 0 (M-01)',
+    });
+  }
+
+  const existente = buscarProductoDuplicado(nombre);
+  if (existente) {
+    return res.status(409).json({
+      error: 'Ya existe un producto con ese nombre',
+      id: existente.id,
     });
   }
 
@@ -78,6 +91,15 @@ router.put('/:id', (req, res) => {
     if (typeof nombre !== 'string' || nombre.trim() === '') {
       return res.status(400).json({ error: 'El campo "nombre" debe ser una cadena no vacía' });
     }
+
+    const existente = buscarProductoDuplicado(nombre, productos[index].id);
+    if (existente) {
+      return res.status(409).json({
+        error: 'Ya existe un producto con ese nombre',
+        id: existente.id,
+      });
+    }
+
     productos[index].nombre = nombre.trim();
   }
 
