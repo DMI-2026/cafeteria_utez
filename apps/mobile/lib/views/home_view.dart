@@ -35,16 +35,30 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _abrirFormulario({Producto? producto}) async {
-    final datos = await FormularioProducto.mostrar(context, producto: producto);
-    if (datos == null || !mounted) return;
+    final guardado = await FormularioProducto.mostrar(
+      context,
+      producto: producto,
+      onGuardar: (datos) => _guardar(datos, producto: producto),
+    );
+    if (guardado != true || !mounted) return;
 
+    _avisar(
+      ok: true,
+      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    );
+  }
+
+  /// Lo llama el formulario y lo espera antes de cerrarse; si falla, el
+  /// formulario sigue abierto con los datos capturados.
+  Future<bool> _guardar(ProductoFormData datos, {Producto? producto}) async {
+    // Aviso local (#18): si se cancela, el formulario sigue abierto.
     final duplicado = _viewModel.hayNombreDuplicado(
       datos.nombre,
       excluirId: producto?.id,
     );
     if (duplicado) {
       final continuar = await _confirmarDuplicado();
-      if (continuar != true || !mounted) return;
+      if (continuar != true || !mounted) return false;
     }
 
     final bool ok;
@@ -63,11 +77,8 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    if (!mounted) return;
-    _avisar(
-      ok: ok,
-      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
-    );
+    if (!ok && mounted) _avisar(ok: false, exito: '');
+    return ok;
   }
 
   /// Aviso local antes de enviar: la API sigue siendo la que decide si el

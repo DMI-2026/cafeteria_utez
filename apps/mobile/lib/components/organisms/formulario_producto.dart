@@ -18,21 +18,31 @@ class ProductoFormData {
   });
 }
 
+/// Guarda los datos capturados; regresa `true` si se guardaron.
+typedef GuardarProducto = Future<bool> Function(ProductoFormData datos);
+
 /// Formulario para crear o editar un producto.
+///
+/// Espera a [onGuardar] antes de cerrarse: mientras guarda, el botón queda
+/// deshabilitado (un toque = una petición) y, si falla, el formulario sigue
+/// abierto con los datos capturados.
 class FormularioProducto extends StatefulWidget {
   final Producto? producto;
+  final GuardarProducto onGuardar;
 
-  const FormularioProducto({super.key, this.producto});
+  const FormularioProducto({super.key, this.producto, required this.onGuardar});
 
-  /// Abre el formulario como hoja inferior y regresa los datos o `null`.
-  static Future<ProductoFormData?> mostrar(
+  /// Abre el formulario como hoja inferior; regresa `true` si se guardó.
+  static Future<bool?> mostrar(
     BuildContext context, {
     Producto? producto,
+    required GuardarProducto onGuardar,
   }) {
-    return showModalBottomSheet<ProductoFormData>(
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => FormularioProducto(producto: producto),
+      builder: (context) =>
+          FormularioProducto(producto: producto, onGuardar: onGuardar),
     );
   }
 
@@ -45,6 +55,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
   late final TextEditingController _nombre;
   late final TextEditingController _precio;
   late bool _disponible;
+  bool _guardando = false;
 
   bool get _esEdicion => widget.producto != null;
 
@@ -68,17 +79,27 @@ class _FormularioProductoState extends State<FormularioProducto> {
     super.dispose();
   }
 
-  void _guardar() {
+  Future<void> _guardar() async {
+    // Un segundo toque antes de reconstruir el botón no manda otra petición.
+    if (_guardando) return;
     if (!_formKey.currentState!.validate()) return;
 
     final precioCentavos = parsePrecioACentavos(_precio.text)!;
-    Navigator.of(context).pop(
+    setState(() => _guardando = true);
+    final guardado = await widget.onGuardar(
       ProductoFormData(
         nombre: _nombre.text.trim(),
         precioCentavos: precioCentavos,
         disponible: _disponible,
       ),
     );
+    if (!mounted) return;
+
+    if (guardado) {
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() => _guardando = false);
+    }
   }
 
   @override
@@ -172,15 +193,32 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _guardando
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancelar'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: _guardar,
-                      child: const Text('Guardar'),
+                      key: const Key('boton-guardar'),
+                      onPressed: _guardando ? null : _guardar,
+                      child: _guardando
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Guardando…'),
+                              ],
+                            )
+                          : const Text('Guardar'),
                     ),
                   ),
                 ],

@@ -27,7 +27,11 @@ void main() {
     await tester.enterText(find.byKey(const Key('campo-nombre')), nombre);
     await tester.enterText(find.byKey(const Key('campo-precio')), '20.00');
     await tester.tap(find.text('Guardar'));
-    await tester.pumpAndSettle();
+    // El aviso sale con el formulario abierto y su indicador «Guardando…»
+    // girando (#15), así que pumpAndSettle no terminaría: basta con dejar
+    // que entre la animación del diálogo.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
   }
 
   testWidgets('un nombre duplicado en la lista muestra el aviso local', (
