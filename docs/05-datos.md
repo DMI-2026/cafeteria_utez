@@ -10,7 +10,7 @@
 | M-02 | La línea de pedido copia el nombre y el precio del producto al momento de pedir | Apuntar solo al producto | Si la cafetería cambia un precio mañana, el pedido de hoy no cambia de total | 2026-10-22 |
 | M-03 | El estado del pedido es uno de `recibido`, `en_preparacion`, `listo` o `entregado` | Un booleano «listo» | H-03 del PRD distingue en preparación de listo, y la cocina necesita saber cuáles ya se entregaron | 2026-10-22 |
 | M-04 | Un producto no se borra: se marca `disponible: false` | Borrarlo | Los pedidos viejos lo siguen mostrando y H-01 pide verlo agotado en gris | 2026-10-22 |
-| M-06 | El producto tiene `descripcion` (texto opcional, máx. 200 caracteres, por defecto `""`) y `tipo` (`alimento`, `bebida_caliente` o `bebida_fria`, por defecto `"alimento"`) | Una bandera booleana «es bebida caliente» | Con un booleano no se distingue un alimento de una bebida fría; el `tipo` cubre los tres casos y los productos anteriores quedan como `alimento` sin migrar | 2026-10-28 |
+| M-06 | El producto tiene `descripcion` (texto opcional, máx. 200 caracteres, por defecto `""`) y `tipo` (`alimento`, `bebida_caliente` o `bebida_fria`, por defecto `"alimento"`) | Dos campos: `categoria` (alimento o bebida) + `temperatura` (caliente o fría) | Dos campos permiten combinaciones sin sentido, como un alimento «frío», y obligan a validarlas; un solo `tipo` cubre exactamente los tres casos que vende la cafetería y la app solo necesita saber si es alimento o qué bebida es. Los productos anteriores quedan como `alimento` sin migrar | 2026-10-28 |
 
 ## ERD conceptual
 
