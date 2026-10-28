@@ -137,12 +137,12 @@ describe('CRUD /productos', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nombre: 'Frappé',
-        tipo: 'bebida',
+        tipo: 'bebida_fria',
         tamanos: [
-          { nombre: 'ch', precio_centavos: 3000 },
-          { nombre: 'md', precio_centavos: 4000 },
-          { nombre: 'g',  precio_centavos: 5000 },
-          { nombre: 'xl', precio_centavos: 6000 },
+          { tamano: 'ch', precio_centavos: 3000 },
+          { tamano: 'md', precio_centavos: 4000 },
+          { tamano: 'g',  precio_centavos: 5000 },
+          { tamano: 'xl', precio_centavos: 6000 },
         ],
       }),
     });
@@ -165,8 +165,8 @@ describe('CRUD /productos', () => {
         tipo: 'alimento',
         precio_centavos: 4000,
         tamanos: [
-          { nombre: 'ch', precio_centavos: 4000 },
-          { nombre: 'g',  precio_centavos: 5000 },
+          { tamano: 'ch', precio_centavos: 4000 },
+          { tamano: 'g',  precio_centavos: 5000 },
         ],
       }),
     });
@@ -181,11 +181,292 @@ describe('CRUD /productos', () => {
     const res = await fetch(`${baseUrl}/productos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre: 'Agua', tipo: 'bebida' }),
+      body: JSON.stringify({ nombre: 'Agua', tipo: 'bebida_fria' }),
     });
 
     assert.equal(res.status, 400);
     const body = await res.json();
     assert.ok(body.error);
+  });
+
+  test('POST /productos con tamaños ignora el precio_centavos enviado y usa el menor', async () => {
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: 'Café americano',
+        tipo: 'bebida_caliente',
+        precio_centavos: 9999,
+        tamanos: [
+          { tamano: 'g', precio_centavos: 4200 },
+          { tamano: 'ch', precio_centavos: 3000 },
+        ],
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.equal(body.precio_centavos, 3000);
+    // Se devuelven ordenados ch → md → g → xl
+    assert.deepEqual(body.tamanos.map((t) => t.tamano), ['ch', 'g']);
+  });
+
+  test('POST /productos con tamaños inválidos responde 400', async () => {
+    const invalidos = [
+      [{}],
+      [{ tamano: 'mega', precio_centavos: 3000 }],
+      [{ tamano: 'ch' }],
+      [{ tamano: 'ch', precio_centavos: 3000 }, { tamano: 'ch', precio_centavos: 3500 }],
+    ];
+
+    for (const tamanos of invalidos) {
+      const res = await fetch(`${baseUrl}/productos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: 'Té helado', tipo: 'bebida_fria', tamanos }),
+      });
+      assert.equal(res.status, 400, JSON.stringify(tamanos));
+    }
+  });
+});
+
+describe('descripcion en /productos', () => {
+  let server;
+  let baseUrl;
+
+  beforeEach((t) => {
+    server = app.listen(0);
+    const { port } = server.address();
+    baseUrl = `http://localhost:${port}`;
+    t.after(() => server.close());
+  });
+
+  const enviar = (metodo, ruta, cuerpo) =>
+    fetch(`${baseUrl}${ruta}`, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+  const crear = async (extra = {}) => {
+    const res = await enviar('POST', '/productos', { nombre: 'Concha', precio_centavos: 1500, ...extra });
+    return res.json();
+  };
+
+  test('POST sin descripcion la guarda como ""', async () => {
+    const res = await enviar('POST', '/productos', { nombre: 'Torta', precio_centavos: 4000 });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion, '');
+  });
+
+  test('POST guarda la descripcion sin espacios sobrantes', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Café de olla',
+      precio_centavos: 3000,
+      descripcion: '  Café de grano de Morelos  ',
+    });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion, 'Café de grano de Morelos');
+  });
+
+  for (const invalida of [123, null, { texto: 'hola' }, ['hola']]) {
+    test(`POST rechaza descripcion que no es texto (${JSON.stringify(invalida)})`, async () => {
+      const res = await enviar('POST', '/productos', {
+        nombre: 'Jugo',
+        precio_centavos: 2500,
+        descripcion: invalida,
+      });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.match(body.error, /descripcion/);
+    });
+  }
+
+  test('POST acepta descripcion de exactamente 200 caracteres', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Molletes',
+      precio_centavos: 3500,
+      descripcion: 'a'.repeat(200),
+    });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.descripcion.length, 200);
+  });
+
+  test('POST rechaza descripcion de más de 200 caracteres', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Chilaquiles',
+      precio_centavos: 5000,
+      descripcion: 'a'.repeat(201),
+    });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /200/);
+  });
+
+  test('POST cuenta los 200 caracteres sin los espacios sobrantes', async () => {
+    const res = await enviar('POST', '/productos', {
+      nombre: 'Enchiladas',
+      precio_centavos: 5500,
+      descripcion: `  ${'a'.repeat(200)}  `,
+    });
+    assert.equal(res.status, 201);
+  });
+
+  test('PUT actualiza la descripcion sin espacios sobrantes', async () => {
+    const producto = await crear();
+    const res = await enviar('PUT', `/productos/${producto.id}`, { descripcion: '  Pan dulce de vainilla ' });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.descripcion, 'Pan dulce de vainilla');
+  });
+
+  test('PUT sin descripcion conserva la que ya tenía', async () => {
+    const producto = await crear({ descripcion: 'Recién horneada' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { precio_centavos: 1800 });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.descripcion, 'Recién horneada');
+  });
+
+  test('PUT rechaza descripcion que no es texto y no cambia el producto', async () => {
+    const producto = await crear({ descripcion: 'Original' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { nombre: 'Otro nombre', descripcion: 42 });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /descripcion/);
+
+    const actual = await (await fetch(`${baseUrl}/productos/${producto.id}`)).json();
+    assert.equal(actual.nombre, producto.nombre);
+    assert.equal(actual.descripcion, 'Original');
+  });
+
+  test('PUT rechaza descripcion de más de 200 caracteres', async () => {
+    const producto = await crear();
+    const res = await enviar('PUT', `/productos/${producto.id}`, { descripcion: 'a'.repeat(201) });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /200/);
+  });
+});
+
+describe('tipo en /productos', () => {
+  let server;
+  let baseUrl;
+
+  beforeEach((t) => {
+    server = app.listen(0);
+    const { port } = server.address();
+    baseUrl = `http://localhost:${port}`;
+    t.after(() => server.close());
+  });
+
+  const enviar = (metodo, ruta, cuerpo) =>
+    fetch(`${baseUrl}${ruta}`, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+  const crear = async (extra = {}) => {
+    const res = await enviar('POST', '/productos', { nombre: 'Latte', precio_centavos: 3200, ...extra });
+    return res.json();
+  };
+
+  test('POST sin tipo lo guarda como "alimento"', async () => {
+    const res = await enviar('POST', '/productos', { nombre: 'Sope', precio_centavos: 2500 });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.tipo, 'alimento');
+  });
+
+  for (const tipo of ['alimento', 'bebida_caliente', 'bebida_fria']) {
+    test(`POST acepta el tipo "${tipo}"`, async () => {
+      const res = await enviar('POST', '/productos', { nombre: `Prod ${tipo}`, precio_centavos: 2000, tipo });
+      assert.equal(res.status, 201);
+      const creado = await res.json();
+      assert.equal(creado.tipo, tipo);
+    });
+  }
+
+  for (const invalido of ['postre', '', null, 7, 'BEBIDA_FRIA']) {
+    test(`POST rechaza tipo inválido (${JSON.stringify(invalido)})`, async () => {
+      const res = await enviar('POST', '/productos', { nombre: 'Raro', precio_centavos: 1000, tipo: invalido });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.match(body.error, /tipo/);
+    });
+  }
+
+  test('PUT actualiza el tipo', async () => {
+    const producto = await crear({ tipo: 'bebida_caliente' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { tipo: 'bebida_fria' });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.tipo, 'bebida_fria');
+  });
+
+  test('PUT sin tipo conserva el que ya tenía', async () => {
+    const producto = await crear({ tipo: 'bebida_fria' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { precio_centavos: 3500 });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.tipo, 'bebida_fria');
+  });
+
+  test('PUT rechaza tipo inválido y no cambia el producto', async () => {
+    const producto = await crear({ tipo: 'bebida_caliente' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { nombre: 'Otro nombre', tipo: 'postre' });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /tipo/);
+
+    const actual = await (await fetch(`${baseUrl}/productos/${producto.id}`)).json();
+    assert.equal(actual.nombre, 'Latte');
+    assert.equal(actual.tipo, 'bebida_caliente');
+  });
+
+  test('GET /productos?tipo=bebida_fria filtra por tipo', async () => {
+    const fria = await crear({ nombre: 'Agua de jamaica', tipo: 'bebida_fria' });
+    const caliente = await crear({ nombre: 'Café de olla', tipo: 'bebida_caliente' });
+    const alimento = await crear({ nombre: 'Torta de milanesa', tipo: 'alimento' });
+
+    const res = await fetch(`${baseUrl}/productos?tipo=bebida_fria`);
+    assert.equal(res.status, 200);
+    const lista = await res.json();
+    const ids = lista.map((p) => p.id);
+
+    assert.ok(ids.includes(fria.id));
+    assert.ok(!ids.includes(caliente.id));
+    assert.ok(!ids.includes(alimento.id));
+    assert.ok(lista.every((p) => p.tipo === 'bebida_fria'));
+  });
+
+  test('GET /productos?tipo=alimento filtra solo alimentos', async () => {
+    const alimento = await crear({ nombre: 'Sincronizada', tipo: 'alimento' });
+    const fria = await crear({ nombre: 'Refresco', tipo: 'bebida_fria' });
+
+    const res = await fetch(`${baseUrl}/productos?tipo=alimento`);
+    assert.equal(res.status, 200);
+    const lista = await res.json();
+    const ids = lista.map((p) => p.id);
+
+    assert.ok(ids.includes(alimento.id));
+    assert.ok(!ids.includes(fria.id));
+    assert.ok(lista.every((p) => p.tipo === 'alimento'));
+  });
+
+  test('GET /productos sin tipo no filtra y sigue incluyendo todos', async () => {
+    const fria = await crear({ nombre: 'Limonada', tipo: 'bebida_fria' });
+    const caliente = await crear({ nombre: 'Chocolate', tipo: 'bebida_caliente' });
+
+    const res = await fetch(`${baseUrl}/productos`);
+    assert.equal(res.status, 200);
+    const ids = (await res.json()).map((p) => p.id);
+
+    assert.ok(ids.includes(fria.id));
+    assert.ok(ids.includes(caliente.id));
   });
 });
