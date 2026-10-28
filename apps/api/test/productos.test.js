@@ -105,6 +105,97 @@ describe('CRUD /productos', () => {
     assert.equal(actualizado.precio_centavos, 3000);
   });
 
+  test('POST /productos rechaza nombres duplicados normalizados con 409 e id existente', async () => {
+    const creadoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Café con leche', precio_centavos: 2500 }),
+    });
+    const creado = await creadoRes.json();
+
+    for (const nombre of ['CAFÉ CON LECHE', 'Cafe con leche', 'Café   con   leche']) {
+      const duplicadoRes = await fetch(`${baseUrl}/productos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, precio_centavos: 2500 }),
+      });
+
+      assert.equal(duplicadoRes.status, 409);
+      assert.deepEqual(await duplicadoRes.json(), {
+        error: 'Ya existe un producto con ese nombre',
+        id: creado.id,
+      });
+    }
+  });
+
+  test('POST /productos considera duplicado un producto no disponible', async () => {
+    const creadoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Pan de queso', precio_centavos: 1800, disponible: false }),
+    });
+    const creado = await creadoRes.json();
+
+    const duplicadoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'PAN DE QUESO', precio_centavos: 1800 }),
+    });
+
+    assert.equal(duplicadoRes.status, 409);
+    assert.deepEqual(await duplicadoRes.json(), {
+      error: 'Ya existe un producto con ese nombre',
+      id: creado.id,
+    });
+  });
+
+  test('PUT /productos/:id rechaza renombrar a otro producto con 409', async () => {
+    const existenteRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Torta de huevo', precio_centavos: 3200 }),
+    });
+    const existente = await existenteRes.json();
+    const productoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Mollete sencillo', precio_centavos: 2500 }),
+    });
+    const producto = await productoRes.json();
+
+    const actualizacionRes = await fetch(`${baseUrl}/productos/${producto.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'TORTA   DE HUEVO' }),
+    });
+
+    assert.equal(actualizacionRes.status, 409);
+    assert.deepEqual(await actualizacionRes.json(), {
+      error: 'Ya existe un producto con ese nombre',
+      id: existente.id,
+    });
+  });
+
+  test('PUT /productos/:id permite conservar el nombre normalizado del mismo producto', async () => {
+    const creadoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Café americano', precio_centavos: 3000 }),
+    });
+    const creado = await creadoRes.json();
+
+    const actualizacionRes = await fetch(`${baseUrl}/productos/${creado.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: ' cafe   americano ' }),
+    });
+
+    assert.equal(actualizacionRes.status, 200);
+    const actualizado = await actualizacionRes.json();
+    assert.equal(actualizado.id, creado.id);
+    assert.equal(actualizado.nombre, 'cafe   americano');
+  });
+
   test('DELETE /productos/:id aplica borrado lógico marcando disponible: false (M-04)', async () => {
     const postRes = await fetch(`${baseUrl}/productos`, {
       method: 'POST',

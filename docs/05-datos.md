@@ -10,6 +10,7 @@
 | M-02 | La línea de pedido copia el nombre y el precio del producto al momento de pedir | Apuntar solo al producto | Si la cafetería cambia un precio mañana, el pedido de hoy no cambia de total | 2026-10-22 |
 | M-03 | El estado del pedido es uno de `recibido`, `en_preparacion`, `listo` o `entregado` | Un booleano «listo» | H-03 del PRD distingue en preparación de listo, y la cocina necesita saber cuáles ya se entregaron | 2026-10-22 |
 | M-04 | Un producto no se borra: se marca `disponible: false` | Borrarlo | Los pedidos viejos lo siguen mostrando y H-01 pide verlo agotado en gris | 2026-10-22 |
+| M-05 | El nombre del producto es único tras quitar espacios sobrantes, colapsar espacios internos, convertir a minúsculas y quitar acentos; los productos no disponibles también cuentan. Un duplicado responde `409` con el `id` existente | Permitir nombres equivalentes o validar solo productos disponibles | Evita duplicados visibles en el menú y mantiene la unicidad aunque un producto esté agotado (M-04) | 2026-10-27 |
 
 ## ERD conceptual
 
