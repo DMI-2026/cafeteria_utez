@@ -127,4 +127,55 @@ describe('CRUD /productos', () => {
     const obtenido = await getRes.json();
     assert.equal(obtenido.disponible, false);
   });
+
+  test('POST /productos rechaza nombre repetido (mayúsculas/minúsculas)', async () => {
+    const res1 = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Café', precio_centavos: 2000 }),
+    });
+    assert.equal(res1.status, 201);
+
+    const res2 = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'café', precio_centavos: 2000 }),
+    });
+    assert.equal(res2.status, 409);
+    const body = await res2.json();
+    assert.ok(body.error);
+    assert.ok(body.id);
+  });
+
+  test('POST /productos rechaza nombre repetido con acento diferente', async () => {
+    const res1 = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Canción', precio_centavos: 2000 }),
+    });
+    assert.equal(res1.status, 201);
+
+    const res2 = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Cancion', precio_centavos: 2000 }),
+    });
+    assert.equal(res2.status, 409);
+    const body = await res2.json();
+    assert.ok(body.error);
+    assert.ok(body.id);
+  });
+
+  test('POST /productos crea un nombre nuevo y responde 201', async () => {
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Té Negro', precio_centavos: 2500 }),
+    });
+
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.ok(creado.id);
+    assert.equal(creado.nombre, 'Té Negro');
+  });
 });

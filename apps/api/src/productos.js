@@ -1,6 +1,13 @@
 const { Router } = require('express');
 const { randomUUID } = require('node:crypto');
 
+const normalizarNombre = (nombre) =>
+  nombre
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
 const router = Router();
 
 // Almacén en memoria de productos
@@ -33,6 +40,8 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
   }
 
+  const nombreNormalizado = normalizarNombre(nombre);
+
   if (
     precio_centavos === undefined ||
     typeof precio_centavos !== 'number' ||
@@ -42,6 +51,14 @@ router.post('/', (req, res) => {
     return res.status(400).json({
       error: 'El campo "precio_centavos" es obligatorio, debe ser un número entero mayor o igual a 0 (M-01)',
     });
+  }
+
+  const nombreExistente = productos.find(
+    (p) => normalizarNombre(p.nombre) === nombreNormalizado
+  );
+
+  if (nombreExistente) {
+    return res.status(409).json({ error: 'Ya existe un producto con ese nombre', id: nombreExistente.id });
   }
 
   const nuevoProducto = {
