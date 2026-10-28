@@ -196,6 +196,29 @@ describe('CRUD /productos', () => {
     assert.equal(actualizado.nombre, 'cafe   americano');
   });
 
+  test('POST /productos trata la ñ como letra propia: «Piña» y «Pina» no son duplicados (M-05)', async () => {
+    const pinaRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Agua de piña', precio_centavos: 2000 }),
+    });
+    assert.equal(pinaRes.status, 201);
+
+    const sinEneRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Agua de pina', precio_centavos: 2000 }),
+    });
+    assert.equal(sinEneRes.status, 201);
+
+    const duplicadoRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'AGUA DE PIÑA', precio_centavos: 2000 }),
+    });
+    assert.equal(duplicadoRes.status, 409);
+  });
+
   test('DELETE /productos/:id aplica borrado lógico marcando disponible: false (M-04)', async () => {
     const postRes = await fetch(`${baseUrl}/productos`, {
       method: 'POST',

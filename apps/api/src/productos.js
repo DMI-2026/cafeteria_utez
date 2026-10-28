@@ -11,6 +11,7 @@ const normalizarNombre = (nombre) =>
     .trim()
     .replace(/\s+/g, ' ')
     .normalize('NFD')
+    .replace(/n\u0303/gi, 'ñ') // la ñ es letra propia, no una n con acento (M-05)
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
 
