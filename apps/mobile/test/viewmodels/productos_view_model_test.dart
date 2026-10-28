@@ -95,7 +95,11 @@ void main() {
         );
 
         expect(duplicado, isFalse);
-        expect(vm.error, contains('Ya existe un producto con ese nombre'));
+        expect(
+          vm.errorNombre,
+          contains('Ya existe un producto con ese nombre'),
+        );
+        expect(vm.error, isNull);
         expect(vm.productos, hasLength(1));
         expect(vm.productos.single.nombre, 'Café americano');
         expect(repo.llamadasCrear, 1);
@@ -107,6 +111,7 @@ void main() {
         );
 
         expect(corregido, isTrue);
+        expect(vm.errorNombre, isNull);
         expect(vm.error, isNull);
         expect(vm.productos.map((p) => p.nombre), contains('Café de olla'));
         expect(repo.llamadasCrear, 2);
