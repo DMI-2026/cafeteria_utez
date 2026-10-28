@@ -51,6 +51,16 @@ class _HomeViewState extends State<HomeView> {
   /// Lo llama el formulario y lo espera antes de cerrarse; si falla, el
   /// formulario sigue abierto con los datos capturados.
   Future<bool> _guardar(ProductoFormData datos, {Producto? producto}) async {
+    // Aviso local (#18): si se cancela, el formulario sigue abierto.
+    final duplicado = _viewModel.hayNombreDuplicado(
+      datos.nombre,
+      excluirId: producto?.id,
+    );
+    if (duplicado) {
+      final continuar = await _confirmarDuplicado();
+      if (continuar != true || !mounted) return false;
+    }
+
     final bool ok;
     if (producto == null) {
       ok = await _viewModel.crear(
@@ -69,6 +79,34 @@ class _HomeViewState extends State<HomeView> {
 
     if (!ok && mounted) _avisar(ok: false, exito: '');
     return ok;
+  }
+
+  /// Aviso local antes de enviar: la API sigue siendo la que decide si el
+  /// nombre es válido, pero aquí se evita un viaje innecesario.
+  Future<bool?> _confirmarDuplicado() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('aviso-duplicado'),
+        title: const Text('Nombre repetido'),
+        content: const Text(
+          'Ya hay un producto con ese nombre en la lista. '
+          '¿Enviar de todos modos?',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('aviso-duplicado-cancelar'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            key: const Key('aviso-duplicado-enviar'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmarBaja(Producto producto) async {

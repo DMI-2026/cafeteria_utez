@@ -136,5 +136,38 @@ void main() {
 
       expect(notificaciones, greaterThanOrEqualTo(2));
     });
+
+    test('hayNombreDuplicado compara el nombre normalizado', () async {
+      final vm = ProductosViewModel(FakeMenuRepository(inicial: [cafe]));
+      await vm.cargar();
+
+      expect(vm.hayNombreDuplicado(' cafe   AMERICANO '), isTrue);
+    });
+
+    test('hayNombreDuplicado cuenta también los productos agotados', () async {
+      final vm = ProductosViewModel(
+        FakeMenuRepository(inicial: [cafe.copyWith(disponible: false)]),
+      );
+      await vm.cargar();
+
+      expect(vm.hayNombreDuplicado('Café americano'), isTrue);
+    });
+
+    test('hayNombreDuplicado ignora el propio id al editar', () async {
+      final vm = ProductosViewModel(FakeMenuRepository(inicial: [cafe]));
+      await vm.cargar();
+
+      expect(
+        vm.hayNombreDuplicado('Café americano', excluirId: 'p-1'),
+        isFalse,
+      );
+    });
+
+    test('hayNombreDuplicado es falso con un nombre distinto', () async {
+      final vm = ProductosViewModel(FakeMenuRepository(inicial: [cafe]));
+      await vm.cargar();
+
+      expect(vm.hayNombreDuplicado('Té'), isFalse);
+    });
   });
 }
