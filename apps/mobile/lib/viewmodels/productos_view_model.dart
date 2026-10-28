@@ -14,10 +14,13 @@ class ProductosViewModel extends ChangeNotifier {
   List<Producto> _productos = const [];
   bool _cargando = false;
   String? _error;
+  String? _errorNombre;
 
   List<Producto> get productos => _productos;
   bool get cargando => _cargando;
   String? get error => _error;
+  /// Mensaje de un 409 para mostrarlo junto al campo nombre del formulario.
+  String? get errorNombre => _errorNombre;
   bool get vacio => !_cargando && _error == null && _productos.isEmpty;
 
   /// Indica si ya hay un producto con el mismo nombre normalizado en la lista
@@ -102,8 +105,18 @@ class ProductosViewModel extends ChangeNotifier {
     String queHacer,
   ) async {
     _error = null;
+    _errorNombre = null;
     try {
       await accion();
+    } on ClientFailure catch (e) {
+      if (e.statusCode == 409) {
+        _errorNombre = e.message;
+        notifyListeners();
+        return false;
+      }
+      _error = _mensaje(e, queHacer);
+      notifyListeners();
+      return false;
     } on HttpFailure catch (e) {
       _error = _mensaje(e, queHacer);
       notifyListeners();

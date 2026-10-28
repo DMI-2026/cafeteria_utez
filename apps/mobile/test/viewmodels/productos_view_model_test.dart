@@ -127,6 +127,23 @@ void main() {
       expect(vm.error, contains('servidor'));
     });
 
+    test('un 409 deja el mensaje en errorNombre sin error general', () async {
+      final repo = FakeMenuRepository(inicial: [cafe])
+        ..fallaAlGuardar = const ClientFailure(
+          409,
+          message: 'Ya existe un producto con ese nombre',
+        );
+      final vm = ProductosViewModel(repo);
+      await vm.cargar();
+
+      final ok = await vm.crear(nombre: 'Café americano', precioCentavos: 1800);
+
+      expect(ok, isFalse);
+      expect(vm.errorNombre, 'Ya existe un producto con ese nombre');
+      expect(vm.error, isNull);
+      expect(vm.productos, hasLength(1));
+    });
+
     test('notifica a quien escucha en cada cambio de estado', () async {
       final vm = ProductosViewModel(FakeMenuRepository(inicial: [cafe]));
       var notificaciones = 0;

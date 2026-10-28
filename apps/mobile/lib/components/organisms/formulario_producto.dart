@@ -18,14 +18,26 @@ class ProductoFormData {
   });
 }
 
-/// Guarda los datos capturados; regresa `true` si se guardaron.
-typedef GuardarProducto = Future<bool> Function(ProductoFormData datos);
+/// Resultado de intentar guardar desde el formulario.
+///
+/// [exito] cierra la hoja. Si falla un 409, [errorNombre] va junto al campo.
+class ResultadoGuardado {
+  final bool exito;
+  final String? errorNombre;
+
+  const ResultadoGuardado.ok() : exito = true, errorNombre = null;
+
+  const ResultadoGuardado.fallo({this.errorNombre}) : exito = false;
+}
+
+/// Guarda los datos capturados; regresa [ResultadoGuardado.ok] si se guardaron.
+typedef GuardarProducto = Future<ResultadoGuardado> Function(ProductoFormData datos);
 
 /// Formulario para crear o editar un producto.
 ///
 /// Espera a [onGuardar] antes de cerrarse: mientras guarda, el botón queda
 /// deshabilitado (un toque = una petición) y, si falla, el formulario sigue
-/// abierto con los datos capturados.
+/// abierto con los datos capturados. Un 409 se muestra como error del nombre.
 class FormularioProducto extends StatefulWidget {
   final Producto? producto;
   final GuardarProducto onGuardar;
@@ -56,6 +68,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
   late final TextEditingController _precio;
   late bool _disponible;
   bool _guardando = false;
+  String? _errorNombre;
 
   bool get _esEdicion => widget.producto != null;
 
@@ -82,11 +95,12 @@ class _FormularioProductoState extends State<FormularioProducto> {
   Future<void> _guardar() async {
     // Un segundo toque antes de reconstruir el botón no manda otra petición.
     if (_guardando) return;
+    setState(() => _errorNombre = null);
     if (!_formKey.currentState!.validate()) return;
 
     final precioCentavos = parsePrecioACentavos(_precio.text)!;
     setState(() => _guardando = true);
-    final guardado = await widget.onGuardar(
+    final resultado = await widget.onGuardar(
       ProductoFormData(
         nombre: _nombre.text.trim(),
         precioCentavos: precioCentavos,
@@ -95,11 +109,19 @@ class _FormularioProductoState extends State<FormularioProducto> {
     );
     if (!mounted) return;
 
-    if (guardado) {
+    if (resultado.exito) {
       Navigator.of(context).pop(true);
     } else {
-      setState(() => _guardando = false);
+      setState(() {
+        _guardando = false;
+        _errorNombre = resultado.errorNombre;
+      });
     }
+  }
+
+  void _alCambiarNombre(String _) {
+    if (_errorNombre == null) return;
+    setState(() => _errorNombre = null);
   }
 
   @override
@@ -145,10 +167,12 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 key: const Key('campo-nombre'),
                 controller: _nombre,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                onChanged: _alCambiarNombre,
+                decoration: InputDecoration(
                   labelText: 'Nombre',
                   hintText: 'Café americano',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  errorText: _errorNombre,
                 ),
                 validator: (valor) {
                   if (valor == null || valor.trim().isEmpty) {

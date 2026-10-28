@@ -49,8 +49,12 @@ class _HomeViewState extends State<HomeView> {
   }
 
   /// Lo llama el formulario y lo espera antes de cerrarse; si falla, el
-  /// formulario sigue abierto con los datos capturados.
-  Future<bool> _guardar(ProductoFormData datos, {Producto? producto}) async {
+  /// formulario sigue abierto con los datos capturados. Un 409 regresa el
+  /// mensaje para el campo nombre (#17).
+  Future<ResultadoGuardado> _guardar(
+    ProductoFormData datos, {
+    Producto? producto,
+  }) async {
     // Aviso local (#18): si se cancela, el formulario sigue abierto.
     final duplicado = _viewModel.hayNombreDuplicado(
       datos.nombre,
@@ -58,7 +62,9 @@ class _HomeViewState extends State<HomeView> {
     );
     if (duplicado) {
       final continuar = await _confirmarDuplicado();
-      if (continuar != true || !mounted) return false;
+      if (continuar != true || !mounted) {
+        return const ResultadoGuardado.fallo();
+      }
     }
 
     final bool ok;
@@ -77,8 +83,15 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    if (!ok && mounted) _avisar(ok: false, exito: '');
-    return ok;
+    if (ok) return const ResultadoGuardado.ok();
+
+    final errorNombre = _viewModel.errorNombre;
+    if (errorNombre != null) {
+      return ResultadoGuardado.fallo(errorNombre: errorNombre);
+    }
+
+    if (mounted) _avisar(ok: false, exito: '');
+    return const ResultadoGuardado.fallo();
   }
 
   /// Aviso local antes de enviar: la API sigue siendo la que decide si el
