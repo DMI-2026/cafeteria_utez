@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/core/errors/http_failure.dart';
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:cafeteria_utez/models/tamano.dart';
 import 'package:cafeteria_utez/viewmodels/productos_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -135,6 +136,24 @@ void main() {
       await vm.cargar();
 
       expect(notificaciones, greaterThanOrEqualTo(2));
+    });
+
+    test('crear manda los tamanos al repositorio', () async {
+      final repo = FakeMenuRepository();
+      final vm = ProductosViewModel(repo);
+
+      final ok = await vm.crear(
+        nombre: 'Café americano',
+        precioCentavos: 3000,
+        tamanos: const [
+          PrecioPorTamano(tamano: Tamano.ch, precioCentavos: 3000),
+          PrecioPorTamano(tamano: Tamano.g, precioCentavos: 4200),
+        ],
+      );
+
+      expect(ok, isTrue);
+      expect(vm.productos.single.tamanos, hasLength(2));
+      expect(vm.productos.single.precioDesde, 3000);
     });
   });
 }

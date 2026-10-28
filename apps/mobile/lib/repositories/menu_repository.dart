@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../core/network/app_http_client.dart';
 import '../models/producto.dart';
+import '../models/tamano.dart';
 
 /// Acceso al menú de la cafetería.
 ///
@@ -14,6 +15,7 @@ abstract class MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    List<PrecioPorTamano> tamanos = const [],
   });
 
   Future<Producto> actualizar(
@@ -21,6 +23,7 @@ abstract class MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    List<PrecioPorTamano>? tamanos,
   });
 
   /// Baja lógica del producto: queda `disponible: false` (M-04).
@@ -57,6 +60,7 @@ class ApiMenuRepository implements MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    List<PrecioPorTamano> tamanos = const [],
   }) async {
     final response = await client.post(
       _uri(),
@@ -64,6 +68,8 @@ class ApiMenuRepository implements MenuRepository {
         'nombre': nombre,
         'precio_centavos': precioCentavos,
         'disponible': disponible,
+        if (tamanos.isNotEmpty)
+          'tamanos': tamanos.map((precio) => precio.toJson()).toList(),
       }),
     );
     return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
@@ -75,6 +81,7 @@ class ApiMenuRepository implements MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    List<PrecioPorTamano>? tamanos,
   }) async {
     final response = await client.put(
       _uri(id),
@@ -82,6 +89,8 @@ class ApiMenuRepository implements MenuRepository {
         'nombre': ?nombre,
         'precio_centavos': ?precioCentavos,
         'disponible': ?disponible,
+        if (tamanos != null && tamanos.isNotEmpty)
+          'tamanos': tamanos.map((precio) => precio.toJson()).toList(),
       }),
     );
     return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));

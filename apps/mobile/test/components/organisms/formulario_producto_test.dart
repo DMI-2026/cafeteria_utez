@@ -87,4 +87,117 @@ void main() {
       expect(g.controller?.text, '42.00');
     });
   });
+
+  group('guardar con tamaños', () {
+    testWidgets('manda los tamaños y el precio es el menor', (tester) async {
+      ProductoFormData? resultado;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    resultado =
+                        await Navigator.of(context).push<ProductoFormData>(
+                          MaterialPageRoute(
+                            builder: (_) => const Scaffold(
+                              body: SingleChildScrollView(
+                                child: FormularioProducto(),
+                              ),
+                            ),
+                          ),
+                        );
+                  },
+                  child: const Text('abrir'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('campo-nombre')),
+        'Café americano',
+      );
+      await tester.tap(find.byKey(const Key('chip-tamano-ch')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('chip-tamano-g')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('campo-precio-tamano-g')),
+        '42.00',
+      );
+      await tester.enterText(
+        find.byKey(const Key('campo-precio-tamano-ch')),
+        '30.00',
+      );
+      await tester.ensureVisible(find.text('Guardar'));
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(resultado, isNotNull);
+      expect(resultado!.precioCentavos, 3000);
+      expect(
+        resultado!.tamanos.map((precio) => precio.tamano),
+        [Tamano.ch, Tamano.g],
+      );
+      expect(resultado!.tamanos.first.precioCentavos, 3000);
+      expect(resultado!.tamanos.last.precioCentavos, 4200);
+    });
+
+    testWidgets('con tamaños ya no pide el precio general', (tester) async {
+      await _mostrar(tester);
+
+      expect(find.byKey(const Key('campo-precio')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('chip-tamano-md')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('campo-precio')), findsNothing);
+    });
+
+    testWidgets('exige el precio de cada tamaño marcado', (tester) async {
+      await _mostrar(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('campo-nombre')),
+        'Café americano',
+      );
+      await tester.tap(find.byKey(const Key('chip-tamano-xl')));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Guardar'));
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Escribe un precio válido, por ejemplo 12.50'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('sin tamaños el precio general sigue siendo obligatorio', (
+      tester,
+    ) async {
+      await _mostrar(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('campo-nombre')),
+        'Pan dulce',
+      );
+      await tester.ensureVisible(find.text('Guardar'));
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Escribe un precio válido, por ejemplo 12.50'),
+        findsOneWidget,
+      );
+    });
+  });
 }

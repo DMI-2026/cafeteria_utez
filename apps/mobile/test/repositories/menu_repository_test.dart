@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/core/errors/http_failure.dart';
 import 'package:cafeteria_utez/core/network/app_http_client.dart';
+import 'package:cafeteria_utez/models/tamano.dart';
 import 'package:cafeteria_utez/repositories/menu_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -114,6 +115,49 @@ void main() {
       );
 
       expect(repository.listar(), throwsA(isA<ServerFailure>()));
+    });
+
+    test('crear manda los tamanos del contrato', () async {
+      final repository = repositoryWith(
+        MockClient((request) async {
+          expect(request.body, contains('"tamanos"'));
+          expect(request.body, contains('"tamano":"ch"'));
+          expect(request.body, contains('"tamano":"g"'));
+          return http.Response(
+            '{"id":"p-10","nombre":"Café americano","precio_centavos":3000,'
+            '"disponible":true,"tamanos":[{"tamano":"ch","precio_centavos":3000},'
+            '{"tamano":"g","precio_centavos":4200}]}',
+            201,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        }),
+      );
+
+      final producto = await repository.crear(
+        nombre: 'Café americano',
+        precioCentavos: 3000,
+        tamanos: const [
+          PrecioPorTamano(tamano: Tamano.ch, precioCentavos: 3000),
+          PrecioPorTamano(tamano: Tamano.g, precioCentavos: 4200),
+        ],
+      );
+
+      expect(producto.tamanos, hasLength(2));
+      expect(producto.precioDesde, 3000);
+    });
+
+    test('crear sin tamanos no manda el campo', () async {
+      final repository = repositoryWith(
+        MockClient((request) async {
+          expect(request.body, isNot(contains('tamanos')));
+          return http.Response(
+            '{"id":"p-11","nombre":"Pan dulce","precio_centavos":1250}',
+            201,
+          );
+        }),
+      );
+
+      await repository.crear(nombre: 'Pan dulce', precioCentavos: 1250);
     });
   });
 }

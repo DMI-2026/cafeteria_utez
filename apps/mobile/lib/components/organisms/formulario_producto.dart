@@ -9,13 +9,19 @@ import '../../models/tamano.dart';
 /// Datos capturados en el formulario; el precio ya va en centavos (M-01).
 class ProductoFormData {
   final String nombre;
+
+  /// Con tamaños, es el menor de ellos (contrato del issue #5).
   final int precioCentavos;
   final bool disponible;
+
+  /// Tamaños elegidos con su precio, en orden ch → md → g → xl.
+  final List<PrecioPorTamano> tamanos;
 
   const ProductoFormData({
     required this.nombre,
     required this.precioCentavos,
     required this.disponible,
+    this.tamanos = const [],
   });
 }
 
@@ -52,6 +58,9 @@ class _FormularioProductoState extends State<FormularioProducto> {
   final Map<Tamano, TextEditingController> _preciosPorTamano = {};
 
   bool get _esEdicion => widget.producto != null;
+
+  /// Con tamaños, el precio general se calcula solo: no se pide.
+  bool get _usaTamanos => _tamanosElegidos.isNotEmpty;
 
   @override
   void initState() {
@@ -100,17 +109,45 @@ class _FormularioProductoState extends State<FormularioProducto> {
     });
   }
 
+  /// Centavos de cada tamaño marcado, en el orden del contrato.
+  List<PrecioPorTamano> _tamanosCapturados() {
+    return [
+      for (final tamano in Tamano.values)
+        if (_tamanosElegidos.contains(tamano))
+          PrecioPorTamano(
+            tamano: tamano,
+            precioCentavos:
+                parsePrecioACentavos(_controlDe(tamano).text) ?? 0,
+          ),
+    ];
+  }
+
   void _guardar() {
     if (!_formKey.currentState!.validate()) return;
 
-    final precioCentavos = parsePrecioACentavos(_precio.text)!;
+    final tamanos = _tamanosCapturados();
+    final precioCentavos = tamanos.isEmpty
+        ? parsePrecioACentavos(_precio.text)!
+        : tamanos
+              .map((precio) => precio.precioCentavos)
+              .reduce((menor, precio) => precio < menor ? precio : menor);
+
     Navigator.of(context).pop(
       ProductoFormData(
         nombre: _nombre.text.trim(),
         precioCentavos: precioCentavos,
         disponible: _disponible,
+        tamanos: tamanos,
       ),
     );
+  }
+
+  String? _validarPrecio(String? valor) {
+    final centavos = parsePrecioACentavos(valor ?? '');
+    if (centavos == null) {
+      return 'Escribe un precio válido, por ejemplo 12.50';
+    }
+    return null;
   }
 
   @override
@@ -168,30 +205,26 @@ class _FormularioProductoState extends State<FormularioProducto> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                key: const Key('campo-precio'),
-                controller: _precio,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+              if (!_usaTamanos) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  key: const Key('campo-precio'),
+                  controller: _precio,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.$]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Precio (MXN)',
+                    hintText: '12.50',
+                    prefixText: '\$ ',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: _validarPrecio,
                 ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d.$]')),
-                ],
-                decoration: const InputDecoration(
-                  labelText: 'Precio (MXN)',
-                  hintText: '12.50',
-                  prefixText: '\$ ',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (valor) {
-                  final centavos = parsePrecioACentavos(valor ?? '');
-                  if (centavos == null) {
-                    return 'Escribe un precio válido, por ejemplo 12.50';
-                  }
-                  return null;
-                },
-              ),
+              ],
               const SizedBox(height: 20),
               Text(
                 'Tamaños',
@@ -235,6 +268,7 @@ class _FormularioProductoState extends State<FormularioProducto> {
                       prefixText: '\$ ',
                       border: const OutlineInputBorder(),
                     ),
+                    validator: _validarPrecio,
                   ),
                 ],
               const SizedBox(height: 8),
