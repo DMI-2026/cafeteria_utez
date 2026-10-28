@@ -11,6 +11,7 @@ class FakeMenuRepository implements MenuRepository {
 
   Object? fallaAlListar;
   Object? fallaAlGuardar;
+  final List<Object> fallasAlCrear = <Object>[];
   int llamadasListar = 0;
   int llamadasCrear = 0;
   int llamadasActualizar = 0;
@@ -31,6 +32,7 @@ class FakeMenuRepository implements MenuRepository {
     bool disponible = true,
   }) async {
     llamadasCrear++;
+    if (fallasAlCrear.isNotEmpty) throw fallasAlCrear.removeAt(0);
     if (fallaAlGuardar != null) throw fallaAlGuardar!;
     final producto = Producto(
       id: 'fake-${++_secuencia}',
