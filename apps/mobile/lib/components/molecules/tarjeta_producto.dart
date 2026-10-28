@@ -84,13 +84,47 @@ class TarjetaProducto extends StatelessWidget {
                         runSpacing: 4,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          PrecioTexto(
-                            centavos: producto.precioCentavos,
-                            tenue: agotado,
-                          ),
+                          if (producto.tamanos.isEmpty)
+                            PrecioTexto(
+                              centavos: producto.precioCentavos,
+                              tenue: agotado,
+                            )
+                          else
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Desde ',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: agotado
+                                        ? AppColors.agotado
+                                        : AppColors.textoSuave,
+                                  ),
+                                ),
+                                PrecioTexto(
+                                  centavos: producto.precioDesde,
+                                  tenue: agotado,
+                                ),
+                              ],
+                            ),
                           BadgeDisponible(disponible: producto.disponible),
                         ],
                       ),
+                      if (producto.tamanos.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          producto.tamanos
+                              .map((precio) => precio.tamano.etiqueta)
+                              .join(' · '),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: agotado
+                                ? AppColors.agotado
+                                : AppColors.textoSuave,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
