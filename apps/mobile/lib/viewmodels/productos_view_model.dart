@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/errors/http_failure.dart';
+import '../core/format/nombre.dart';
 import '../models/producto.dart';
 import '../repositories/menu_repository.dart';
 
@@ -18,6 +19,18 @@ class ProductosViewModel extends ChangeNotifier {
   bool get cargando => _cargando;
   String? get error => _error;
   bool get vacio => !_cargando && _error == null && _productos.isEmpty;
+
+  /// Indica si ya hay un producto con el mismo nombre normalizado en la lista
+  /// cargada, incluidos los agotados. Al editar, pasa [excluirId] para que el
+  /// propio producto no cuente como duplicado.
+  bool hayNombreDuplicado(String nombre, {String? excluirId}) {
+    final buscado = normalizarNombre(nombre);
+    return _productos.any(
+      (producto) =>
+          producto.id != excluirId &&
+          normalizarNombre(producto.nombre) == buscado,
+    );
+  }
 
   /// Carga el menú completo. Un fallo deja un mensaje que dice qué hacer.
   Future<void> cargar() async {
