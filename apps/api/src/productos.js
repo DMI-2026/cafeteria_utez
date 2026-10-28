@@ -6,45 +6,14 @@ const router = Router();
 // Almacén en memoria de productos
 const productos = [];
 
-const DESCRIPCION_MAX = 200;
-
-// Devuelve { valor } con la descripción limpia o { error } si no es válida (contrato de #5)
-function validarDescripcion(descripcion) {
-  if (typeof descripcion !== 'string') {
-    return { error: 'El campo "descripcion" debe ser texto' };
-  }
-  const limpia = descripcion.trim();
-  if (limpia.length > DESCRIPCION_MAX) {
-    return { error: `El campo "descripcion" no puede pasar de ${DESCRIPCION_MAX} caracteres` };
-  }
-  return { valor: limpia };
-}
-
-const TIPOS_VALIDOS = ['alimento', 'bebida_caliente', 'bebida_fria'];
-
-// Devuelve { valor } con el tipo o { error } si no es uno de los valores del contrato de #5
-function validarTipo(tipo) {
-  if (!TIPOS_VALIDOS.includes(tipo)) {
-    return { error: `El campo "tipo" debe ser uno de: ${TIPOS_VALIDOS.join(', ')}` };
-  }
-  return { valor: tipo };
-}
-
-// GET /productos  (?disponible=true|false y/o ?tipo=alimento|bebida_caliente|bebida_fria)
+// GET /productos
 router.get('/', (req, res) => {
-  const { disponible, tipo } = req.query;
-  let resultado = productos;
-
+  const { disponible } = req.query;
   if (disponible !== undefined) {
     const isDisp = disponible === 'true';
-    resultado = resultado.filter((p) => p.disponible === isDisp);
+    return res.json(productos.filter((p) => p.disponible === isDisp));
   }
-
-  if (tipo !== undefined) {
-    resultado = resultado.filter((p) => p.tipo === tipo);
-  }
-
-  res.json(resultado);
+  res.json(productos);
 });
 
 // GET /productos/:id
@@ -58,7 +27,7 @@ router.get('/:id', (req, res) => {
 
 // POST /productos
 router.post('/', (req, res) => {
-  const { nombre, precio_centavos, disponible, descripcion = '', tipo = 'alimento' } = req.body;
+  const { nombre, precio_centavos, disponible } = req.body;
 
   if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
@@ -75,21 +44,9 @@ router.post('/', (req, res) => {
     });
   }
 
-  const desc = validarDescripcion(descripcion);
-  if (desc.error) {
-    return res.status(400).json({ error: desc.error });
-  }
-
-  const tipoValidado = validarTipo(tipo);
-  if (tipoValidado.error) {
-    return res.status(400).json({ error: tipoValidado.error });
-  }
-
   const nuevoProducto = {
     id: randomUUID(),
     nombre: nombre.trim(),
-    descripcion: desc.valor,
-    tipo: tipoValidado.valor,
     precio_centavos,
     disponible: disponible !== undefined ? Boolean(disponible) : true,
   };
@@ -105,24 +62,7 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Producto no encontrado' });
   }
 
-  const { nombre, precio_centavos, disponible, descripcion, tipo } = req.body;
-
-  // Se valida antes de modificar nada para no dejar cambios a medias
-  let desc;
-  if (descripcion !== undefined) {
-    desc = validarDescripcion(descripcion);
-    if (desc.error) {
-      return res.status(400).json({ error: desc.error });
-    }
-  }
-
-  let tipoValidado;
-  if (tipo !== undefined) {
-    tipoValidado = validarTipo(tipo);
-    if (tipoValidado.error) {
-      return res.status(400).json({ error: tipoValidado.error });
-    }
-  }
+  const { nombre, precio_centavos, disponible } = req.body;
 
   if (nombre !== undefined) {
     if (typeof nombre !== 'string' || nombre.trim() === '') {
@@ -138,14 +78,6 @@ router.put('/:id', (req, res) => {
       });
     }
     productos[index].precio_centavos = precio_centavos;
-  }
-
-  if (desc) {
-    productos[index].descripcion = desc.valor;
-  }
-
-  if (tipoValidado) {
-    productos[index].tipo = tipoValidado.valor;
   }
 
   if (disponible !== undefined) {

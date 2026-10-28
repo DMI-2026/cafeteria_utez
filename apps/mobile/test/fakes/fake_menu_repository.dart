@@ -1,5 +1,4 @@
 import 'package:cafeteria_utez/models/producto.dart';
-import 'package:cafeteria_utez/models/tipo_producto.dart';
 import 'package:cafeteria_utez/repositories/menu_repository.dart';
 
 /// Doble en memoria del [MenuRepository] para pruebas, sin red.
@@ -28,8 +27,6 @@ class FakeMenuRepository implements MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
-    String descripcion = '',
-    TipoProducto tipo = TipoProducto.alimento,
   }) async {
     if (fallaAlGuardar != null) throw fallaAlGuardar!;
     final producto = Producto(
@@ -37,8 +34,6 @@ class FakeMenuRepository implements MenuRepository {
       nombre: nombre,
       precioCentavos: precioCentavos,
       disponible: disponible,
-      descripcion: descripcion,
-      tipo: tipo,
     );
     _productos.add(producto);
     return producto;
@@ -50,8 +45,6 @@ class FakeMenuRepository implements MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
-    String? descripcion,
-    TipoProducto? tipo,
   }) async {
     if (fallaAlGuardar != null) throw fallaAlGuardar!;
     final index = _productos.indexWhere((p) => p.id == id);
@@ -62,8 +55,6 @@ class FakeMenuRepository implements MenuRepository {
       nombre: nombre,
       precioCentavos: precioCentavos,
       disponible: disponible,
-      descripcion: descripcion,
-      tipo: tipo,
     );
     return _productos[index];
   }

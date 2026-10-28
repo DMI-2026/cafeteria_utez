@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../core/errors/http_failure.dart';
 import '../models/producto.dart';
-import '../models/tipo_producto.dart';
 import '../repositories/menu_repository.dart';
 
 /// Estado de la pantalla de productos (patrón Observer, C-08).
@@ -45,16 +44,12 @@ class ProductosViewModel extends ChangeNotifier {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
-    String descripcion = '',
-    TipoProducto tipo = TipoProducto.alimento,
   }) {
     return _guardar(
       () => _repository.crear(
         nombre: nombre,
         precioCentavos: precioCentavos,
         disponible: disponible,
-        descripcion: descripcion,
-        tipo: tipo,
       ),
       'guardar el producto',
     );
@@ -65,8 +60,6 @@ class ProductosViewModel extends ChangeNotifier {
     required String nombre,
     required int precioCentavos,
     required bool disponible,
-    String? descripcion,
-    TipoProducto? tipo,
   }) {
     return _guardar(
       () => _repository.actualizar(
@@ -74,8 +67,6 @@ class ProductosViewModel extends ChangeNotifier {
         nombre: nombre,
         precioCentavos: precioCentavos,
         disponible: disponible,
-        descripcion: descripcion,
-        tipo: tipo,
       ),
       'guardar los cambios',
     );
