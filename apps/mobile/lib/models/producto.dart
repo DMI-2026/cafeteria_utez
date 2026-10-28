@@ -24,23 +24,35 @@ class Producto {
       nombre: json['nombre'] as String,
       precioCentavos: (json['precio_centavos'] as num).toInt(),
       disponible: json['disponible'] as bool? ?? true,
+      descripcion: json['descripcion'] as String? ?? '',
+      tipo: json['tipo'] as String? ?? 'alimento',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'nombre': nombre,
+      'descripcion': descripcion,
+      'tipo': tipo,
       'precio_centavos': precioCentavos,
       'disponible': disponible,
     };
   }
 
-  Producto copyWith({String? nombre, int? precioCentavos, bool? disponible}) {
+  Producto copyWith({
+    String? nombre,
+    int? precioCentavos,
+    bool? disponible,
+    String? descripcion,
+    String? tipo,
+  }) {
     return Producto(
       id: id,
       nombre: nombre ?? this.nombre,
       precioCentavos: precioCentavos ?? this.precioCentavos,
       disponible: disponible ?? this.disponible,
+      descripcion: descripcion ?? this.descripcion,
+      tipo: tipo ?? this.tipo,
     );
   }
 }

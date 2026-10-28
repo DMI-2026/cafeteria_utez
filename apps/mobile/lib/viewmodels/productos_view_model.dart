@@ -44,12 +44,16 @@ class ProductosViewModel extends ChangeNotifier {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    String descripcion = '',
+    String tipo = 'alimento',
   }) {
     return _guardar(
       () => _repository.crear(
         nombre: nombre,
         precioCentavos: precioCentavos,
         disponible: disponible,
+        descripcion: descripcion,
+        tipo: tipo,
       ),
       'guardar el producto',
     );
@@ -60,6 +64,8 @@ class ProductosViewModel extends ChangeNotifier {
     required String nombre,
     required int precioCentavos,
     required bool disponible,
+    String? descripcion,
+    String? tipo,
   }) {
     return _guardar(
       () => _repository.actualizar(
@@ -67,6 +73,8 @@ class ProductosViewModel extends ChangeNotifier {
         nombre: nombre,
         precioCentavos: precioCentavos,
         disponible: disponible,
+        descripcion: descripcion,
+        tipo: tipo,
       ),
       'guardar los cambios',
     );
