@@ -13,12 +13,15 @@ class ProductosViewModel extends ChangeNotifier {
 
   List<Producto> _productos = const [];
   bool _cargando = false;
+  bool _guardando = false;
   String? _error;
   String? _errorNombre;
 
   List<Producto> get productos => _productos;
   bool get cargando => _cargando;
+  bool get guardando => _guardando;
   String? get error => _error;
+
   /// Mensaje de un 409 para mostrarlo junto al campo nombre del formulario.
   String? get errorNombre => _errorNombre;
   bool get vacio => !_cargando && _error == null && _productos.isEmpty;
@@ -104,31 +107,34 @@ class ProductosViewModel extends ChangeNotifier {
     Future<Producto> Function() accion,
     String queHacer,
   ) async {
+    if (_guardando) return false;
+
+    _guardando = true;
     _error = null;
     _errorNombre = null;
+    notifyListeners();
+
     try {
       await accion();
+      await cargar();
+      return true;
     } on ClientFailure catch (e) {
       if (e.statusCode == 409) {
         _errorNombre = e.message;
-        notifyListeners();
         return false;
       }
       _error = _mensaje(e, queHacer);
-      notifyListeners();
       return false;
     } on HttpFailure catch (e) {
       _error = _mensaje(e, queHacer);
-      notifyListeners();
       return false;
     } catch (_) {
       _error = 'Ocurrió un error inesperado al $queHacer. Intenta de nuevo.';
-      notifyListeners();
       return false;
+    } finally {
+      _guardando = false;
+      notifyListeners();
     }
-
-    await cargar();
-    return true;
   }
 
   String _mensaje(HttpFailure failure, String queHacer) {

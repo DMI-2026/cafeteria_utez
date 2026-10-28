@@ -114,6 +114,65 @@ void main() {
       expect(vm.productos.single.disponible, isTrue);
     });
 
+    test(
+      'crear y actualizar marcan guardando y lo apagan al terminar',
+      () async {
+        final repo = FakeMenuRepository(inicial: [cafe]);
+        final vm = ProductosViewModel(repo);
+        await vm.cargar();
+
+        final crearFuturo = vm.crear(nombre: 'Pan dulce', precioCentavos: 1250);
+        expect(vm.guardando, isTrue);
+        await crearFuturo;
+        expect(vm.guardando, isFalse);
+
+        final actualizarFuturo = vm.actualizar(
+          'p-1',
+          nombre: 'Café de olla',
+          precioCentavos: 2000,
+          disponible: true,
+        );
+        expect(vm.guardando, isTrue);
+        await actualizarFuturo;
+        expect(vm.guardando, isFalse);
+      },
+    );
+
+    test(
+      'si ya está guardando, una segunda llamada no hace otra petición',
+      () async {
+        final repo = FakeMenuRepository();
+        final vm = ProductosViewModel(repo);
+        await vm.cargar();
+
+        final primero = vm.crear(nombre: 'Pan dulce', precioCentavos: 1250);
+        expect(vm.guardando, isTrue);
+        final segundo = vm.crear(nombre: 'Té', precioCentavos: 800);
+
+        await primero;
+        final okSegundo = await segundo;
+
+        expect(okSegundo, isFalse);
+        expect(repo.llamadasCrear, 1);
+        expect(vm.guardando, isFalse);
+      },
+    );
+
+    test('guardando vuelve a false cuando guardar falla', () async {
+      final repo = FakeMenuRepository(inicial: [cafe])
+        ..fallaAlGuardar = const ServerFailure(500);
+      final vm = ProductosViewModel(repo);
+      await vm.cargar();
+
+      final futuro = vm.crear(nombre: 'Té', precioCentavos: 1000);
+      expect(vm.guardando, isTrue);
+      final ok = await futuro;
+
+      expect(ok, isFalse);
+      expect(vm.guardando, isFalse);
+      expect(vm.error, contains('servidor'));
+    });
+
     test('si guardar falla regresa false y conserva la lista', () async {
       final repo = FakeMenuRepository(inicial: [cafe])
         ..fallaAlGuardar = const ServerFailure(500);
