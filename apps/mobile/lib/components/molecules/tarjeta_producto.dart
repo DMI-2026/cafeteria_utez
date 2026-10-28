@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/producto.dart';
 import '../atoms/badge_disponible.dart';
+import '../atoms/badge_temperatura.dart';
 import '../atoms/precio_texto.dart';
 
 /// Una fila del menú con su precio, su estado y sus acciones.
@@ -78,6 +79,17 @@ class TarjetaProducto extends StatelessWidget {
                                   : null,
                             ),
                       ),
+                      if (producto.descripcion.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          producto.descripcion,
+                          key: const Key('descripcion-producto'),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textoSuave),
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       Wrap(
                         spacing: 10,
@@ -89,6 +101,7 @@ class TarjetaProducto extends StatelessWidget {
                             tenue: agotado,
                           ),
                           BadgeDisponible(disponible: producto.disponible),
+                          BadgeTemperatura(tipo: producto.tipo),
                         ],
                       ),
                     ],

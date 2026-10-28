@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../core/network/app_http_client.dart';
 import '../models/producto.dart';
+import '../models/tipo_producto.dart';
 
 /// Acceso al menú de la cafetería.
 ///
@@ -14,6 +15,8 @@ abstract class MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    String descripcion = '',
+    TipoProducto tipo = TipoProducto.alimento,
   });
 
   Future<Producto> actualizar(
@@ -21,6 +24,8 @@ abstract class MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    String? descripcion,
+    TipoProducto? tipo,
   });
 
   /// Baja lógica del producto: queda `disponible: false` (M-04).
@@ -57,11 +62,15 @@ class ApiMenuRepository implements MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    String descripcion = '',
+    TipoProducto tipo = TipoProducto.alimento,
   }) async {
     final response = await client.post(
       _uri(),
       body: jsonEncode({
         'nombre': nombre,
+        'descripcion': descripcion,
+        'tipo': tipo.json,
         'precio_centavos': precioCentavos,
         'disponible': disponible,
       }),
@@ -75,11 +84,15 @@ class ApiMenuRepository implements MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    String? descripcion,
+    TipoProducto? tipo,
   }) async {
     final response = await client.put(
       _uri(id),
       body: jsonEncode({
         'nombre': ?nombre,
+        'descripcion': ?descripcion,
+        'tipo': ?tipo?.json,
         'precio_centavos': ?precioCentavos,
         'disponible': ?disponible,
       }),

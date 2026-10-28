@@ -43,12 +43,15 @@ Lista todos los productos registrados.
 
 - **Query params (opcional)**:
   - `disponible=true|false`: Filtra productos por su estado de disponibilidad.
+  - `tipo=alimento|bebida_caliente|bebida_fria`: Filtra productos por tipo (M-06). Se puede combinar con `disponible`; un valor desconocido devuelve una lista vacía.
 - **Respuesta 200 OK**:
   ```json
   [
     {
       "id": "e0b8a5b2-300c-4c74-9130-f8f6df74f762",
       "nombre": "Café Americano",
+      "descripcion": "Café de grano de Morelos",
+      "tipo": "bebida_caliente",
       "precio_centavos": 3500,
       "disponible": true
     }
@@ -63,6 +66,8 @@ Obtiene los detalles de un producto por su identificador único.
   {
     "id": "e0b8a5b2-300c-4c74-9130-f8f6df74f762",
     "nombre": "Café Americano",
+    "descripcion": "Café de grano de Morelos",
+    "tipo": "bebida_caliente",
     "precio_centavos": 3500,
     "disponible": true
   }
@@ -81,13 +86,15 @@ Crea un nuevo producto en el catálogo.
   ```json
   {
     "nombre": "Café Americano",
+    "descripcion": "Café de grano de Morelos",
+    "tipo": "bebida_caliente",
     "precio_centavos": 3500,
     "disponible": true
   }
   ```
-  *(Nota: `disponible` es opcional, por defecto es `true`).*
+  *(Nota: `disponible` es opcional, por defecto es `true`. `descripcion` es opcional, máximo 200 caracteres sin espacios sobrantes, por defecto `""`. `tipo` es opcional: `alimento`, `bebida_caliente` o `bebida_fria`, por defecto `"alimento"`. Ver M-06 en `docs/05-datos.md`).*
 - **Respuesta 201 Created**: Objeto del producto creado con su `id` asignado.
-- **Respuesta 400 Bad Request**: Cuando falta el nombre o el precio no es un entero positivo (M-01).
+- **Respuesta 400 Bad Request**: Cuando falta el nombre, el precio no es un entero positivo (M-01), `descripcion` no es texto o pasa de 200 caracteres, o `tipo` no es uno de los tres valores.
 
 #### `PUT /productos/:id`
 Actualiza campos de un producto existente.
@@ -96,11 +103,15 @@ Actualiza campos de un producto existente.
   ```json
   {
     "nombre": "Café Americano Grande",
+    "descripcion": "Café de grano de Morelos, tamaño grande",
+    "tipo": "bebida_caliente",
     "precio_centavos": 4200,
     "disponible": true
   }
   ```
+  *(Los campos que no se envían conservan su valor; `descripcion` y `tipo` se validan igual que en `POST`).*
 - **Respuesta 200 OK**: Objeto del producto actualizado.
+- **Respuesta 400 Bad Request**: Si `descripcion` o `tipo` no son válidos.
 - **Respuesta 404 Not Found**: Si no existe el identificador.
 
 #### `DELETE /productos/:id`
@@ -111,6 +122,8 @@ Desactiva un producto (borrado lógico: `disponible: false`).
   {
     "id": "e0b8a5b2-300c-4c74-9130-f8f6df74f762",
     "nombre": "Café Americano",
+    "descripcion": "Café de grano de Morelos",
+    "tipo": "bebida_caliente",
     "precio_centavos": 3500,
     "disponible": false
   }
