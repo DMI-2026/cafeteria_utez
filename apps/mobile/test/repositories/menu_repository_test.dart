@@ -115,5 +115,86 @@ void main() {
 
       expect(repository.listar(), throwsA(isA<ServerFailure>()));
     });
+
+    test('crear traduce 409 leyendo el error del body JSON', () async {
+      final repository = repositoryWith(
+        MockClient((request) async {
+          return http.Response(
+            '{"error":"Ya existe un producto con ese nombre","id":"p-existente"}',
+            409,
+            headers: {'content-type': 'application/json; charset=utf-8'},
+          );
+        }),
+      );
+
+      expect(
+        () => repository.crear(nombre: 'Café de olla', precioCentavos: 1800),
+        throwsA(
+          isA<ClientFailure>()
+              .having((e) => e.statusCode, 'statusCode', 409)
+              .having(
+                (e) => e.message,
+                'message',
+                'Ya existe un producto con ese nombre',
+              ),
+        ),
+      );
+    });
+
+    test(
+      'crear traduce 409 con mensaje por defecto si no se puede leer el JSON',
+      () async {
+        final repository = repositoryWith(
+          MockClient((request) async {
+            return http.Response('Error de conflicto no estructurado', 409);
+          }),
+        );
+
+        expect(
+          () => repository.crear(nombre: 'Café de olla', precioCentavos: 1800),
+          throwsA(
+            isA<ClientFailure>()
+                .having((e) => e.statusCode, 'statusCode', 409)
+                .having(
+                  (e) => e.message,
+                  'message',
+                  'Ya existe un producto con ese nombre',
+                ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'actualizar traduce 409 al modificar producto con nombre repetido',
+      () async {
+        final repository = repositoryWith(
+          MockClient((request) async {
+            return http.Response(
+              '{"error":"Ya existe un producto con ese nombre"}',
+              409,
+              headers: {'content-type': 'application/json; charset=utf-8'},
+            );
+          }),
+        );
+
+        expect(
+          () => repository.actualizar(
+            'p-1',
+            nombre: 'Té chai',
+            precioCentavos: 2000,
+          ),
+          throwsA(
+            isA<ClientFailure>()
+                .having((e) => e.statusCode, 'statusCode', 409)
+                .having(
+                  (e) => e.message,
+                  'message',
+                  'Ya existe un producto con ese nombre',
+                ),
+          ),
+        );
+      },
+    );
   });
 }

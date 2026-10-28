@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../core/errors/http_failure.dart';
 import '../core/network/app_http_client.dart';
 import '../models/producto.dart';
 
@@ -58,15 +59,17 @@ class ApiMenuRepository implements MenuRepository {
     required int precioCentavos,
     bool disponible = true,
   }) async {
-    final response = await client.post(
-      _uri(),
-      body: jsonEncode({
-        'nombre': nombre,
-        'precio_centavos': precioCentavos,
-        'disponible': disponible,
-      }),
-    );
-    return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
+    return _capturar409(() async {
+      final response = await client.post(
+        _uri(),
+        body: jsonEncode({
+          'nombre': nombre,
+          'precio_centavos': precioCentavos,
+          'disponible': disponible,
+        }),
+      );
+      return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
+    });
   }
 
   @override
@@ -76,20 +79,53 @@ class ApiMenuRepository implements MenuRepository {
     int? precioCentavos,
     bool? disponible,
   }) async {
-    final response = await client.put(
-      _uri(id),
-      body: jsonEncode({
-        'nombre': ?nombre,
-        'precio_centavos': ?precioCentavos,
-        'disponible': ?disponible,
-      }),
-    );
-    return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
+    return _capturar409(() async {
+      final response = await client.put(
+        _uri(id),
+        body: jsonEncode({
+          'nombre': ?nombre,
+          'precio_centavos': ?precioCentavos,
+          'disponible': ?disponible,
+        }),
+      );
+      return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
+    });
   }
 
   @override
   Future<Producto> darDeBaja(String id) async {
     final response = await client.delete(_uri(id));
     return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
+  }
+
+  Future<T> _capturar409<T>(Future<T> Function() accion) async {
+    try {
+      return await accion();
+    } on ClientFailure catch (e) {
+      if (e.statusCode == 409) {
+        throw ClientFailure(
+          e.statusCode,
+          body: e.body,
+          message: _extraerMensaje409(e.body),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  String _extraerMensaje409(String body) {
+    const porDefecto = 'Ya existe un producto con ese nombre';
+    try {
+      final data = jsonDecode(body);
+      if (data is Map<String, dynamic>) {
+        final error = data['error'];
+        if (error is String && error.trim().isNotEmpty) {
+          return error;
+        }
+      }
+    } catch (_) {
+      // Si el body no es un JSON válido o no se puede leer, se usa el mensaje por defecto.
+    }
+    return porDefecto;
   }
 }
