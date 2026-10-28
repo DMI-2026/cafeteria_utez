@@ -127,4 +127,30 @@ describe('CRUD /productos', () => {
     const obtenido = await getRes.json();
     assert.equal(obtenido.disponible, false);
   });
+
+  test('POST /productos rechaza nombre duplicadoaún cuando el existente tenga disponible: false', async () => {
+    const postRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Torta', precio_centavos: 5000, disponible: true }),
+    });
+    const producto = await postRes.json();
+
+    const deleteRes = await fetch(`${baseUrl}/productos/${producto.id}`, {
+      method: 'DELETE',
+    });
+
+    assert.equal(deleteRes.status, 200);
+
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'torta', precio_centavos: 4000, disponible: true }),
+    });
+
+    assert.equal(res.status, 409);
+    const body = await res.json();
+    assert.ok(body.error);
+    assert.ok(body.id);
+  });
 });

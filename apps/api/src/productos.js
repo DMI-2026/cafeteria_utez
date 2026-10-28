@@ -33,6 +33,16 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
   }
 
+  const nombreNormalizado = nombre.trim().toLowerCase();
+  const existente = productos.find((p) => p.nombre.toLowerCase() === nombreNormalizado);
+
+  if (existente) {
+    return res.status(409).json({
+      error: `Ya existe un producto con ese nombre. Reactiva el existente (ID: ${existente.id}) en lugar de crear otro`,
+      id: existente.id,
+    });
+  }
+
   if (
     precio_centavos === undefined ||
     typeof precio_centavos !== 'number' ||
