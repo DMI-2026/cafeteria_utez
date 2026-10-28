@@ -127,6 +127,33 @@ describe('CRUD /productos', () => {
     const obtenido = await getRes.json();
     assert.equal(obtenido.disponible, false);
   });
+
+  // Issue #32: Compatibilidad: productos sin tamaños
+  test('GET /productos y GET /productos/:id siempre devuelven tamanos ([] si no tiene) (#32)', async () => {
+    const postRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Café de Olla', precio_centavos: 2500 }),
+    });
+    assert.equal(postRes.status, 201);
+    const creado = await postRes.json();
+
+    // GET /productos/:id debe traer tamanos: []
+    const getUnoRes = await fetch(`${baseUrl}/productos/${creado.id}`);
+    assert.equal(getUnoRes.status, 200);
+    const obtenidoUno = await getUnoRes.json();
+    assert.ok(Array.isArray(obtenidoUno.tamanos), 'tamanos debe ser un arreglo');
+    assert.deepEqual(obtenidoUno.tamanos, []);
+
+    // GET /productos debe traer tamanos: []
+    const getTodosRes = await fetch(`${baseUrl}/productos`);
+    assert.equal(getTodosRes.status, 200);
+    const lista = await getTodosRes.json();
+    const encontrado = lista.find((p) => p.id === creado.id);
+    assert.ok(encontrado, 'El producto debe encontrarse en la lista');
+    assert.ok(Array.isArray(encontrado.tamanos), 'tamanos debe ser un arreglo en la lista');
+    assert.deepEqual(encontrado.tamanos, []);
+  });
 });
 
 describe('descripcion en /productos', () => {

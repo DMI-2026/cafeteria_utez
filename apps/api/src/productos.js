@@ -30,6 +30,20 @@ function validarTipo(tipo) {
   return { valor: tipo };
 }
 
+/**
+ * Garantiza que un producto siempre incluya el campo "tamanos" ([] si no tiene).
+ * Contrato fijado en issue #5 e issue #32 (team-4).
+ *
+ * @param {object} producto
+ * @returns {object} Producto con la propiedad tamanos garantizada
+ */
+function normalizarProducto(producto) {
+  return {
+    ...producto,
+    tamanos: Array.isArray(producto.tamanos) ? producto.tamanos : [],
+  };
+}
+
 // GET /productos  (?disponible=true|false y/o ?tipo=alimento|bebida_caliente|bebida_fria)
 router.get('/', (req, res) => {
   const { disponible, tipo } = req.query;
@@ -44,7 +58,7 @@ router.get('/', (req, res) => {
     resultado = resultado.filter((p) => p.tipo === tipo);
   }
 
-  res.json(resultado);
+  res.json(resultado.map(normalizarProducto));
 });
 
 // GET /productos/:id
@@ -53,7 +67,7 @@ router.get('/:id', (req, res) => {
   if (!producto) {
     return res.status(404).json({ error: 'Producto no encontrado' });
   }
-  res.json(producto);
+  res.json(normalizarProducto(producto));
 });
 
 // POST /productos
