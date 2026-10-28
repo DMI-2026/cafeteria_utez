@@ -6,12 +6,16 @@ class Producto {
   final String nombre;
   final int precioCentavos;
   final bool disponible;
+  final String descripcion;
+  final String tipo;
 
   const Producto({
     required this.id,
     required this.nombre,
     required this.precioCentavos,
     required this.disponible,
+    this.descripcion = '',
+    this.tipo = 'alimento',
   });
 
   factory Producto.fromJson(Map<String, dynamic> json) {

@@ -10,12 +10,29 @@ class ProductoFormData {
   final String nombre;
   final int precioCentavos;
   final bool disponible;
+  final String descripcion;
+  final String tipo;
 
   const ProductoFormData({
     required this.nombre,
     required this.precioCentavos,
     required this.disponible,
+    required this.descripcion,
+    required this.tipo,
   });
+}
+
+/// Opciones del selector de tipo (M-06 · contrato de #5).
+const _tiposDisponibles = <_OpcionTipo>[
+  _OpcionTipo('alimento', 'Alimento'),
+  _OpcionTipo('bebida_caliente', 'Bebida caliente'),
+  _OpcionTipo('bebida_fria', 'Bebida fría'),
+];
+
+class _OpcionTipo {
+  final String valor;
+  final String etiqueta;
+  const _OpcionTipo(this.valor, this.etiqueta);
 }
 
 /// Formulario para crear o editar un producto.
@@ -44,7 +61,9 @@ class _FormularioProductoState extends State<FormularioProducto> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nombre;
   late final TextEditingController _precio;
+  late final TextEditingController _descripcion;
   late bool _disponible;
+  late String _tipo;
 
   bool get _esEdicion => widget.producto != null;
 
@@ -58,13 +77,16 @@ class _FormularioProductoState extends State<FormularioProducto> {
           ? ''
           : formatPrecio(producto.precioCentavos).replaceFirst('\$', ''),
     );
+    _descripcion = TextEditingController(text: producto?.descripcion ?? '');
     _disponible = producto?.disponible ?? true;
+    _tipo = producto?.tipo ?? 'alimento';
   }
 
   @override
   void dispose() {
     _nombre.dispose();
     _precio.dispose();
+    _descripcion.dispose();
     super.dispose();
   }
 
@@ -77,6 +99,8 @@ class _FormularioProductoState extends State<FormularioProducto> {
         nombre: _nombre.text.trim(),
         precioCentavos: precioCentavos,
         disponible: _disponible,
+        descripcion: _descripcion.text.trim(),
+        tipo: _tipo,
       ),
     );
   }
@@ -158,6 +182,41 @@ class _FormularioProductoState extends State<FormularioProducto> {
                     return 'Escribe un precio válido, por ejemplo 12.50';
                   }
                   return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                key: const Key('campo-descripcion'),
+                controller: _descripcion,
+                maxLength: 200,
+                minLines: 2,
+                maxLines: 4,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción',
+                  hintText: 'Qué lleva el producto (opcional)',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                key: const Key('campo-tipo'),
+                initialValue: _tipo,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (final opcion in _tiposDisponibles)
+                    DropdownMenuItem<String>(
+                      value: opcion.valor,
+                      child: Text(opcion.etiqueta),
+                    ),
+                ],
+                onChanged: (valor) {
+                  if (valor == null) return;
+                  setState(() => _tipo = valor);
                 },
               ),
               const SizedBox(height: 8),
