@@ -131,15 +131,8 @@ describe('validarTamanos', () => {
         { tamano: 'md', precio_centavos: 3200 },
       ];
 
-      assert.deepEqual(ordenarTamanos(lista), [
-        { tamano: 'ch', precio_centavos: 2500 },
-        { tamano: 'md', precio_centavos: 3200 },
-        { tamano: 'g', precio_centavos: 3800 },
-        { tamano: 'xl', precio_centavos: 4500 },
-      ]);
-
       assert.equal(validarTamanos(lista), null);
-      assert.deepEqual(lista, [
+      assert.deepEqual(ordenarTamanos(lista), [
         { tamano: 'ch', precio_centavos: 2500 },
         { tamano: 'md', precio_centavos: 3200 },
         { tamano: 'g', precio_centavos: 3800 },

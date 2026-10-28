@@ -48,8 +48,6 @@ function validarTamanos(tamanos) {
     vistos.add(item.tamano);
   }
 
-  tamanos.sort((a, b) => TAMANOS_VALIDOS.indexOf(a.tamano) - TAMANOS_VALIDOS.indexOf(b.tamano));
-
   return null;
 }
 
