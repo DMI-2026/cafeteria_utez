@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { randomUUID } = require('node:crypto');
+const { validarTamanos, ordenarTamanos } = require('./tamanos');
 
 const router = Router();
 
@@ -58,21 +59,10 @@ router.get('/:id', (req, res) => {
 
 // POST /productos
 router.post('/', (req, res) => {
-  const { nombre, precio_centavos, disponible, descripcion = '', tipo = 'alimento' } = req.body;
+  const { nombre, precio_centavos, disponible, descripcion = '', tipo = 'alimento', tamanos = [] } = req.body;
 
   if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
-  }
-
-  if (
-    precio_centavos === undefined ||
-    typeof precio_centavos !== 'number' ||
-    !Number.isInteger(precio_centavos) ||
-    precio_centavos < 0
-  ) {
-    return res.status(400).json({
-      error: 'El campo "precio_centavos" es obligatorio, debe ser un número entero mayor o igual a 0 (M-01)',
-    });
   }
 
   const desc = validarDescripcion(descripcion);
@@ -85,13 +75,41 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: tipoValidado.error });
   }
 
+  const errorTamanos = validarTamanos(tamanos);
+  if (errorTamanos) {
+    return res.status(400).json({ error: errorTamanos });
+  }
+
+  // Tamaños solo aplican a bebidas (contrato de #5)
+  if (tamanos.length > 0 && tipoValidado.valor === 'alimento') {
+    return res.status(400).json({
+      error: 'El campo "tamanos" no aplica para productos de tipo "alimento"',
+    });
+  }
+
+  let precioFinal = precio_centavos;
+  if (tamanos.length > 0) {
+    // Con tamaños la API calcula el precio «desde»: el menor de los tamaños (contrato de #5)
+    precioFinal = Math.min(...tamanos.map((t) => t.precio_centavos));
+  } else if (
+    precio_centavos === undefined ||
+    typeof precio_centavos !== 'number' ||
+    !Number.isInteger(precio_centavos) ||
+    precio_centavos < 0
+  ) {
+    return res.status(400).json({
+      error: 'El campo "precio_centavos" es obligatorio, debe ser un número entero mayor o igual a 0 (M-01)',
+    });
+  }
+
   const nuevoProducto = {
     id: randomUUID(),
     nombre: nombre.trim(),
     descripcion: desc.valor,
     tipo: tipoValidado.valor,
-    precio_centavos,
+    precio_centavos: precioFinal,
     disponible: disponible !== undefined ? Boolean(disponible) : true,
+    tamanos: ordenarTamanos(tamanos),
   };
 
   productos.push(nuevoProducto);

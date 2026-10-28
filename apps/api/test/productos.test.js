@@ -127,6 +127,107 @@ describe('CRUD /productos', () => {
     const obtenido = await getRes.json();
     assert.equal(obtenido.disponible, false);
   });
+
+  // ── Issue #30: POST con tamaños ─────────────────────────────────────────────
+
+  test('POST /productos bebida con tamaños: precio_centavos es el menor y no es obligatorio enviarlo', async () => {
+    // No se envía precio_centavos; debe calcularse como el menor de los tamaños
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: 'Frappé',
+        tipo: 'bebida_fria',
+        tamanos: [
+          { tamano: 'ch', precio_centavos: 3000 },
+          { tamano: 'md', precio_centavos: 4000 },
+          { tamano: 'g',  precio_centavos: 5000 },
+          { tamano: 'xl', precio_centavos: 6000 },
+        ],
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.equal(body.nombre, 'Frappé');
+    // precio_centavos debe ser el menor: 3000
+    assert.equal(body.precio_centavos, 3000);
+    assert.ok(Array.isArray(body.tamanos));
+    assert.equal(body.tamanos.length, 4);
+  });
+
+  test('POST /productos tipo alimento con tamaños responde 400', async () => {
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: 'Torta',
+        tipo: 'alimento',
+        precio_centavos: 4000,
+        tamanos: [
+          { tamano: 'ch', precio_centavos: 4000 },
+          { tamano: 'g',  precio_centavos: 5000 },
+        ],
+      }),
+    });
+
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.ok(body.error);
+  });
+
+  test('POST /productos sin tamaños sigue requiriendo precio_centavos (comportamiento actual)', async () => {
+    // Sin tamanos, precio_centavos es obligatorio
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Agua', tipo: 'bebida_fria' }),
+    });
+
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.ok(body.error);
+  });
+
+  test('POST /productos con tamaños ignora el precio_centavos enviado y usa el menor', async () => {
+    const res = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre: 'Café americano',
+        tipo: 'bebida_caliente',
+        precio_centavos: 9999,
+        tamanos: [
+          { tamano: 'g', precio_centavos: 4200 },
+          { tamano: 'ch', precio_centavos: 3000 },
+        ],
+      }),
+    });
+
+    assert.equal(res.status, 201);
+    const body = await res.json();
+    assert.equal(body.precio_centavos, 3000);
+    // Se devuelven ordenados ch → md → g → xl
+    assert.deepEqual(body.tamanos.map((t) => t.tamano), ['ch', 'g']);
+  });
+
+  test('POST /productos con tamaños inválidos responde 400', async () => {
+    const invalidos = [
+      [{}],
+      [{ tamano: 'mega', precio_centavos: 3000 }],
+      [{ tamano: 'ch' }],
+      [{ tamano: 'ch', precio_centavos: 3000 }, { tamano: 'ch', precio_centavos: 3500 }],
+    ];
+
+    for (const tamanos of invalidos) {
+      const res = await fetch(`${baseUrl}/productos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: 'Té helado', tipo: 'bebida_fria', tamanos }),
+      });
+      assert.equal(res.status, 400, JSON.stringify(tamanos));
+    }
+  });
 });
 
 describe('descripcion en /productos', () => {
