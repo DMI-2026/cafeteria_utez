@@ -35,9 +35,22 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _abrirFormulario({Producto? producto}) async {
-    final datos = await FormularioProducto.mostrar(context, producto: producto);
-    if (datos == null || !mounted) return;
+    final guardado = await FormularioProducto.mostrar(
+      context,
+      producto: producto,
+      onGuardar: (datos) => _guardar(datos, producto: producto),
+    );
+    if (guardado != true || !mounted) return;
 
+    _avisar(
+      ok: true,
+      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    );
+  }
+
+  /// Lo llama el formulario y lo espera antes de cerrarse; si falla, el
+  /// formulario sigue abierto con los datos capturados.
+  Future<bool> _guardar(ProductoFormData datos, {Producto? producto}) async {
     final bool ok;
     if (producto == null) {
       ok = await _viewModel.crear(
@@ -54,11 +67,8 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    if (!mounted) return;
-    _avisar(
-      ok: ok,
-      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
-    );
+    if (!ok && mounted) _avisar(ok: false, exito: '');
+    return ok;
   }
 
   Future<void> _confirmarBaja(Producto producto) async {
