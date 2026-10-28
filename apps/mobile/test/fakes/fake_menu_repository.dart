@@ -16,6 +16,17 @@ class FakeMenuRepository implements MenuRepository {
 
   List<Producto> get productos => List.unmodifiable(_productos);
 
+  /// Como la API, devuelve los tamaños ordenados ch → md → g → xl.
+  List<PrecioPorTamano> _ordenar(List<PrecioPorTamano> tamanos) {
+    final orden = Tamano.values;
+    return List<PrecioPorTamano>.of(tamanos)
+      ..sort(
+        (a, b) => orden
+            .indexOf(a.tamano)
+            .compareTo(orden.indexOf(b.tamano)),
+      );
+  }
+
   @override
   Future<List<Producto>> listar() async {
     llamadasListar++;
@@ -36,7 +47,7 @@ class FakeMenuRepository implements MenuRepository {
       nombre: nombre,
       precioCentavos: precioCentavos,
       disponible: disponible,
-      tamanos: tamanos,
+      tamanos: List<PrecioPorTamano>.unmodifiable(_ordenar(tamanos)),
     );
     _productos.add(producto);
     return producto;
@@ -59,7 +70,9 @@ class FakeMenuRepository implements MenuRepository {
       nombre: nombre,
       precioCentavos: precioCentavos,
       disponible: disponible,
-      tamanos: tamanos,
+      tamanos: tamanos == null
+          ? null
+          : List<PrecioPorTamano>.unmodifiable(_ordenar(tamanos)),
     );
     return _productos[index];
   }

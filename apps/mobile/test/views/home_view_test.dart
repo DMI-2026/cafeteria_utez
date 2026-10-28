@@ -1,5 +1,6 @@
 import 'package:cafeteria_utez/core/errors/http_failure.dart';
 import 'package:cafeteria_utez/models/producto.dart';
+import 'package:cafeteria_utez/models/tamano.dart';
 import 'package:cafeteria_utez/views/home_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -167,5 +168,75 @@ void main() {
 
     expect(repo.productos.single.disponible, isTrue);
     expect(find.text('Agotado'), findsNothing);
+  });
+
+  testWidgets('crear un producto con tamaños lo muestra desde el menor', (
+    tester,
+  ) async {
+    final repo = FakeMenuRepository();
+    await montar(tester, repo);
+
+    await tester.tap(find.byTooltip('Agregar producto'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('campo-nombre')),
+      'Café americano',
+    );
+    await tester.tap(find.byKey(const Key('chip-tamano-g')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chip-tamano-ch')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('campo-precio-tamano-ch')),
+      '30',
+    );
+    await tester.enterText(
+      find.byKey(const Key('campo-precio-tamano-g')),
+      '42',
+    );
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    final creado = repo.productos.single;
+    expect(creado.tamanos.map((precio) => precio.tamano), [
+      Tamano.ch,
+      Tamano.g,
+    ]);
+    expect(creado.precioDesde, 3000);
+    expect(find.text('Desde '), findsOneWidget);
+    expect(find.text('\$30.00'), findsOneWidget);
+    expect(find.text('Chico · Grande'), findsOneWidget);
+  });
+
+  testWidgets('editar un producto con tamaños cambia sus precios', (
+    tester,
+  ) async {
+    const americano = Producto(
+      id: 'p-5',
+      nombre: 'Café americano',
+      precioCentavos: 3000,
+      disponible: true,
+      tamanos: [
+        PrecioPorTamano(tamano: Tamano.ch, precioCentavos: 3000),
+        PrecioPorTamano(tamano: Tamano.g, precioCentavos: 4200),
+      ],
+    );
+    final repo = FakeMenuRepository(inicial: [americano]);
+    await montar(tester, repo);
+
+    await tester.tap(find.text('Café americano'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('chip-tamano-g')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Guardar'));
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+
+    expect(repo.productos.single.tamanos, hasLength(1));
+    expect(repo.productos.single.tamanos.single.tamano, Tamano.ch);
+    expect(repo.productos.single.precioDesde, 3000);
   });
 }
