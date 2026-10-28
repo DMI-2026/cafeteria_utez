@@ -88,6 +88,22 @@ Crea un nuevo producto en el catálogo.
   *(Nota: `disponible` es opcional, por defecto es `true`).*
 - **Respuesta 201 Created**: Objeto del producto creado con su `id` asignado.
 - **Respuesta 400 Bad Request**: Cuando falta el nombre o el precio no es un entero positivo (M-01).
+- **Respuesta 409 Conflict**: Si ya existe un producto con ese nombre normalizado (M-05), incluso si no está disponible. Por ejemplo, si existe «Café Americano», esta petición también es duplicada:
+  ```http
+  POST /productos
+  Content-Type: application/json
+
+  {
+    "nombre": " cafe   americano ",
+    "precio_centavos": 3500
+  }
+  ```
+  ```json
+  {
+    "error": "Ya existe un producto con ese nombre",
+    "id": "e0b8a5b2-300c-4c74-9130-f8f6df74f762"
+  }
+  ```
 
 #### `PUT /productos/:id`
 Actualiza campos de un producto existente.

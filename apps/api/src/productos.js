@@ -6,6 +6,21 @@ const router = Router();
 // Almacén en memoria de productos
 const productos = [];
 
+const normalizarNombre = (nombre) =>
+  nombre
+    .trim()
+    .replace(/\s+/g, ' ')
+    .normalize('NFD')
+    .replace(/n\u0303/gi, 'ñ') // la ñ es letra propia, no una n con acento (M-05)
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+
+const buscarProductoDuplicado = (nombre, idExcluido) =>
+  productos.find(
+    (producto) =>
+      producto.id !== idExcluido && normalizarNombre(producto.nombre) === normalizarNombre(nombre),
+  );
+
 // GET /productos
 router.get('/', (req, res) => {
   const { disponible } = req.query;
@@ -44,6 +59,14 @@ router.post('/', (req, res) => {
     });
   }
 
+  const existente = buscarProductoDuplicado(nombre);
+  if (existente) {
+    return res.status(409).json({
+      error: 'Ya existe un producto con ese nombre',
+      id: existente.id,
+    });
+  }
+
   const nuevoProducto = {
     id: randomUUID(),
     nombre: nombre.trim(),
@@ -69,13 +92,12 @@ router.put('/:id', (req, res) => {
       return res.status(400).json({ error: 'El campo "nombre" debe ser una cadena no vacía' });
     }
 
-    // El nombre solo cuenta como ocupado si lo usa otro producto (M-05)
-    const nombreBuscado = nombre.trim().toLowerCase();
-    const otro = productos.find(
-      (p) => p.id !== productos[index].id && p.nombre.trim().toLowerCase() === nombreBuscado,
-    );
-    if (otro) {
-      return res.status(409).json({ error: 'Ya existe un producto con ese nombre', id: otro.id });
+    const existente = buscarProductoDuplicado(nombre, productos[index].id);
+    if (existente) {
+      return res.status(409).json({
+        error: 'Ya existe un producto con ese nombre',
+        id: existente.id,
+      });
     }
 
     productos[index].nombre = nombre.trim();
