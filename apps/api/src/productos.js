@@ -68,6 +68,16 @@ router.put('/:id', (req, res) => {
     if (typeof nombre !== 'string' || nombre.trim() === '') {
       return res.status(400).json({ error: 'El campo "nombre" debe ser una cadena no vacía' });
     }
+
+    // El nombre solo cuenta como ocupado si lo usa otro producto (M-05)
+    const nombreBuscado = nombre.trim().toLowerCase();
+    const otro = productos.find(
+      (p) => p.id !== productos[index].id && p.nombre.trim().toLowerCase() === nombreBuscado,
+    );
+    if (otro) {
+      return res.status(409).json({ error: 'Ya existe un producto con ese nombre', id: otro.id });
+    }
+
     productos[index].nombre = nombre.trim();
   }
 
