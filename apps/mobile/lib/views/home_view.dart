@@ -38,6 +38,15 @@ class _HomeViewState extends State<HomeView> {
     final datos = await FormularioProducto.mostrar(context, producto: producto);
     if (datos == null || !mounted) return;
 
+    final duplicado = _viewModel.hayNombreDuplicado(
+      datos.nombre,
+      excluirId: producto?.id,
+    );
+    if (duplicado) {
+      final continuar = await _confirmarDuplicado();
+      if (continuar != true || !mounted) return;
+    }
+
     final bool ok;
     if (producto == null) {
       ok = await _viewModel.crear(
@@ -58,6 +67,34 @@ class _HomeViewState extends State<HomeView> {
     _avisar(
       ok: ok,
       exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    );
+  }
+
+  /// Aviso local antes de enviar: la API sigue siendo la que decide si el
+  /// nombre es válido, pero aquí se evita un viaje innecesario.
+  Future<bool?> _confirmarDuplicado() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('aviso-duplicado'),
+        title: const Text('Nombre repetido'),
+        content: const Text(
+          'Ya hay un producto con ese nombre en la lista. '
+          '¿Enviar de todos modos?',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('aviso-duplicado-cancelar'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            key: const Key('aviso-duplicado-enviar'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
     );
   }
 
