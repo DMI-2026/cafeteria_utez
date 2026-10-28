@@ -20,6 +20,16 @@ function validarDescripcion(descripcion) {
   return { valor: limpia };
 }
 
+const TIPOS_VALIDOS = ['alimento', 'bebida_caliente', 'bebida_fria'];
+
+// Devuelve { valor } con el tipo o { error } si no es uno de los valores del contrato de #5
+function validarTipo(tipo) {
+  if (!TIPOS_VALIDOS.includes(tipo)) {
+    return { error: `El campo "tipo" debe ser uno de: ${TIPOS_VALIDOS.join(', ')}` };
+  }
+  return { valor: tipo };
+}
+
 // GET /productos
 router.get('/', (req, res) => {
   const { disponible } = req.query;
@@ -41,7 +51,7 @@ router.get('/:id', (req, res) => {
 
 // POST /productos
 router.post('/', (req, res) => {
-  const { nombre, precio_centavos, disponible, descripcion = '' } = req.body;
+  const { nombre, precio_centavos, disponible, descripcion = '', tipo = 'alimento' } = req.body;
 
   if (!nombre || typeof nombre !== 'string' || nombre.trim() === '') {
     return res.status(400).json({ error: 'El campo "nombre" es obligatorio y debe ser una cadena válida' });
@@ -63,10 +73,16 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: desc.error });
   }
 
+  const tipoValidado = validarTipo(tipo);
+  if (tipoValidado.error) {
+    return res.status(400).json({ error: tipoValidado.error });
+  }
+
   const nuevoProducto = {
     id: randomUUID(),
     nombre: nombre.trim(),
     descripcion: desc.valor,
+    tipo: tipoValidado.valor,
     precio_centavos,
     disponible: disponible !== undefined ? Boolean(disponible) : true,
   };
@@ -82,7 +98,7 @@ router.put('/:id', (req, res) => {
     return res.status(404).json({ error: 'Producto no encontrado' });
   }
 
-  const { nombre, precio_centavos, disponible, descripcion } = req.body;
+  const { nombre, precio_centavos, disponible, descripcion, tipo } = req.body;
 
   // Se valida antes de modificar nada para no dejar cambios a medias
   let desc;
@@ -90,6 +106,14 @@ router.put('/:id', (req, res) => {
     desc = validarDescripcion(descripcion);
     if (desc.error) {
       return res.status(400).json({ error: desc.error });
+    }
+  }
+
+  let tipoValidado;
+  if (tipo !== undefined) {
+    tipoValidado = validarTipo(tipo);
+    if (tipoValidado.error) {
+      return res.status(400).json({ error: tipoValidado.error });
     }
   }
 
@@ -111,6 +135,10 @@ router.put('/:id', (req, res) => {
 
   if (desc) {
     productos[index].descripcion = desc.valor;
+  }
+
+  if (tipoValidado) {
+    productos[index].tipo = tipoValidado.valor;
   }
 
   if (disponible !== undefined) {

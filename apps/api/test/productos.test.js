@@ -250,3 +250,80 @@ describe('descripcion en /productos', () => {
     assert.match(body.error, /200/);
   });
 });
+
+describe('tipo en /productos', () => {
+  let server;
+  let baseUrl;
+
+  beforeEach((t) => {
+    server = app.listen(0);
+    const { port } = server.address();
+    baseUrl = `http://localhost:${port}`;
+    t.after(() => server.close());
+  });
+
+  const enviar = (metodo, ruta, cuerpo) =>
+    fetch(`${baseUrl}${ruta}`, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    });
+
+  const crear = async (extra = {}) => {
+    const res = await enviar('POST', '/productos', { nombre: 'Latte', precio_centavos: 3200, ...extra });
+    return res.json();
+  };
+
+  test('POST sin tipo lo guarda como "alimento"', async () => {
+    const res = await enviar('POST', '/productos', { nombre: 'Sope', precio_centavos: 2500 });
+    assert.equal(res.status, 201);
+    const creado = await res.json();
+    assert.equal(creado.tipo, 'alimento');
+  });
+
+  for (const tipo of ['alimento', 'bebida_caliente', 'bebida_fria']) {
+    test(`POST acepta el tipo "${tipo}"`, async () => {
+      const res = await enviar('POST', '/productos', { nombre: `Prod ${tipo}`, precio_centavos: 2000, tipo });
+      assert.equal(res.status, 201);
+      const creado = await res.json();
+      assert.equal(creado.tipo, tipo);
+    });
+  }
+
+  for (const invalido of ['postre', '', null, 7, 'BEBIDA_FRIA']) {
+    test(`POST rechaza tipo inválido (${JSON.stringify(invalido)})`, async () => {
+      const res = await enviar('POST', '/productos', { nombre: 'Raro', precio_centavos: 1000, tipo: invalido });
+      assert.equal(res.status, 400);
+      const body = await res.json();
+      assert.match(body.error, /tipo/);
+    });
+  }
+
+  test('PUT actualiza el tipo', async () => {
+    const producto = await crear({ tipo: 'bebida_caliente' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { tipo: 'bebida_fria' });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.tipo, 'bebida_fria');
+  });
+
+  test('PUT sin tipo conserva el que ya tenía', async () => {
+    const producto = await crear({ tipo: 'bebida_fria' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { precio_centavos: 3500 });
+    assert.equal(res.status, 200);
+    const actualizado = await res.json();
+    assert.equal(actualizado.tipo, 'bebida_fria');
+  });
+
+  test('PUT rechaza tipo inválido y no cambia el producto', async () => {
+    const producto = await crear({ tipo: 'bebida_caliente' });
+    const res = await enviar('PUT', `/productos/${producto.id}`, { nombre: 'Otro nombre', tipo: 'postre' });
+    assert.equal(res.status, 400);
+    const body = await res.json();
+    assert.match(body.error, /tipo/);
+
+    const actual = await (await fetch(`${baseUrl}/productos/${producto.id}`)).json();
+    assert.equal(actual.nombre, 'Latte');
+    assert.equal(actual.tipo, 'bebida_caliente');
+  });
+});
