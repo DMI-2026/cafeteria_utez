@@ -219,6 +219,59 @@ describe('CRUD /productos', () => {
     assert.equal(duplicadoRes.status, 409);
   });
 
+  test('PUT /productos/:id permite renombrar a su propio nombre aunque cambien mayúsculas', async () => {
+    const postRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Agua de jamaica', precio_centavos: 2000 }),
+    });
+    const producto = await postRes.json();
+
+    const putRes = await fetch(`${baseUrl}/productos/${producto.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'AGUA DE JAMAICA' }),
+    });
+
+    assert.equal(putRes.status, 200);
+    const actualizado = await putRes.json();
+    assert.equal(actualizado.id, producto.id);
+    assert.equal(actualizado.nombre, 'AGUA DE JAMAICA');
+  });
+
+  test('PUT /productos/:id responde 409 con el id del otro producto al renombrar a un nombre ocupado', async () => {
+    const otroRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Chilaquiles verdes', precio_centavos: 5500 }),
+    });
+    const otro = await otroRes.json();
+
+    const postRes = await fetch(`${baseUrl}/productos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Enchiladas suizas', precio_centavos: 6000 }),
+    });
+    const producto = await postRes.json();
+
+    const putRes = await fetch(`${baseUrl}/productos/${producto.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: 'Chilaquiles Verdes' }),
+    });
+
+    assert.equal(putRes.status, 409);
+    assert.deepEqual(await putRes.json(), {
+      error: 'Ya existe un producto con ese nombre',
+      id: otro.id,
+    });
+
+    // El producto conserva su nombre original
+    const getRes = await fetch(`${baseUrl}/productos/${producto.id}`);
+    const sinCambios = await getRes.json();
+    assert.equal(sinCambios.nombre, 'Enchiladas suizas');
+  });
+
   test('DELETE /productos/:id aplica borrado lógico marcando disponible: false (M-04)', async () => {
     const postRes = await fetch(`${baseUrl}/productos`, {
       method: 'POST',
