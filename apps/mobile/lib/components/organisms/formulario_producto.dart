@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/format/dinero.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/producto.dart';
+import '../../models/tamano.dart';
 
 /// Datos capturados en el formulario; el precio ya va en centavos (M-01).
 class ProductoFormData {
@@ -46,6 +47,10 @@ class _FormularioProductoState extends State<FormularioProducto> {
   late final TextEditingController _precio;
   late bool _disponible;
 
+  /// Tamaños marcados en el selector y el precio capturado de cada uno.
+  final Set<Tamano> _tamanosElegidos = <Tamano>{};
+  final Map<Tamano, TextEditingController> _preciosPorTamano = {};
+
   bool get _esEdicion => widget.producto != null;
 
   @override
@@ -59,13 +64,40 @@ class _FormularioProductoState extends State<FormularioProducto> {
           : formatPrecio(producto.precioCentavos).replaceFirst('\$', ''),
     );
     _disponible = producto?.disponible ?? true;
+
+    for (final precio in producto?.tamanos ?? const <PrecioPorTamano>[]) {
+      _tamanosElegidos.add(precio.tamano);
+      _preciosPorTamano[precio.tamano] = TextEditingController(
+        text: formatPrecio(precio.precioCentavos).replaceFirst('\$', ''),
+      );
+    }
   }
 
   @override
   void dispose() {
     _nombre.dispose();
     _precio.dispose();
+    for (final control in _preciosPorTamano.values) {
+      control.dispose();
+    }
     super.dispose();
+  }
+
+  TextEditingController _controlDe(Tamano tamano) {
+    return _preciosPorTamano.putIfAbsent(
+      tamano,
+      () => TextEditingController(),
+    );
+  }
+
+  void _alternarTamano(Tamano tamano, bool elegido) {
+    setState(() {
+      if (elegido) {
+        _tamanosElegidos.add(tamano);
+      } else {
+        _tamanosElegidos.remove(tamano);
+      }
+    });
   }
 
   void _guardar() {
@@ -160,6 +192,51 @@ class _FormularioProductoState extends State<FormularioProducto> {
                   return null;
                 },
               ),
+              const SizedBox(height: 20),
+              Text(
+                'Tamaños',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Si la bebida se vende por tamaños, márcalos y anota el '
+                'precio de cada uno.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final tamano in Tamano.values)
+                    FilterChip(
+                      key: Key('chip-tamano-${tamano.codigo}'),
+                      label: Text(tamano.etiqueta),
+                      selected: _tamanosElegidos.contains(tamano),
+                      onSelected: (elegido) => _alternarTamano(tamano, elegido),
+                    ),
+                ],
+              ),
+              for (final tamano in Tamano.values)
+                if (_tamanosElegidos.contains(tamano)) ...[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: Key('campo-precio-tamano-${tamano.codigo}'),
+                    controller: _controlDe(tamano),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d.$]')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Precio ${tamano.etiqueta} (MXN)',
+                      hintText: '12.50',
+                      prefixText: '\$ ',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
