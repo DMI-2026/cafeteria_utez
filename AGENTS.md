@@ -40,7 +40,7 @@ App para pedir en la cafetería sin hacer fila. Las decisiones viven en `docs/` 
 3. Rama `feat/<n>-<tema>` o `fix/<n>-<tema>` desde `main`; nunca push a `main` (C-01).
 4. Prueba primero, mírala fallar, luego implementa (C-06).
 5. `./scripts/check.sh` en verde; commit en español con Conventional Commits: `feat`, `fix`, `docs`, `test`, `chore` (C-02).
-6. PR a `main` con `Closes #<n>`; lo aprueba otra persona del equipo (C-03, `CONTRIBUIDORES.md`).
+6. PR a `main` con `Closes #<n>`; lo aprueba otra persona del equipo (C-03, `CONTRIBUIDORES.md`). Si una PR aprobada ya contiene los commits de otra, fusiona la de arriba: fusionar primero la de abajo cambia su base y GitHub descarta la aprobación (`dismiss_stale_reviews`).
 7. Una decisión nueva va a la tabla de su documento en `docs/`, con la alternativa descartada.
 
 ## Nunca
