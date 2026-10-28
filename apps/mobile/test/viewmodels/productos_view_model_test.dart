@@ -73,6 +73,47 @@ void main() {
       expect(repo.llamadasListar, greaterThanOrEqualTo(2));
     });
 
+    test(
+      'flujo de duplicado: muestra el 409, corrige el nombre y guarda',
+      () async {
+        final repo = FakeMenuRepository(inicial: [cafe]);
+        final vm = ProductosViewModel(repo);
+        await vm.cargar();
+        expect(repo.llamadasListar, 1);
+
+        repo.fallasAlCrear.add(
+          const ClientFailure(
+            409,
+            body: '{"error":"Ya existe un producto con ese nombre"}',
+            message: 'Ya existe un producto con ese nombre',
+          ),
+        );
+
+        final duplicado = await vm.crear(
+          nombre: 'Café americano',
+          precioCentavos: 1800,
+        );
+
+        expect(duplicado, isFalse);
+        expect(vm.error, contains('Ya existe un producto con ese nombre'));
+        expect(vm.productos, hasLength(1));
+        expect(vm.productos.single.nombre, 'Café americano');
+        expect(repo.llamadasCrear, 1);
+        expect(repo.llamadasListar, 1);
+
+        final corregido = await vm.crear(
+          nombre: 'Café de olla',
+          precioCentavos: 1800,
+        );
+
+        expect(corregido, isTrue);
+        expect(vm.error, isNull);
+        expect(vm.productos.map((p) => p.nombre), contains('Café de olla'));
+        expect(repo.llamadasCrear, 2);
+        expect(repo.llamadasListar, 2);
+      },
+    );
+
     test('actualizar reemplaza el producto con los nuevos datos', () async {
       final repo = FakeMenuRepository(inicial: [cafe]);
       final vm = ProductosViewModel(repo);
