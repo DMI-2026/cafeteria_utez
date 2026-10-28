@@ -30,14 +30,21 @@ function validarTipo(tipo) {
   return { valor: tipo };
 }
 
-// GET /productos
+// GET /productos  (?disponible=true|false y/o ?tipo=alimento|bebida_caliente|bebida_fria)
 router.get('/', (req, res) => {
-  const { disponible } = req.query;
+  const { disponible, tipo } = req.query;
+  let resultado = productos;
+
   if (disponible !== undefined) {
     const isDisp = disponible === 'true';
-    return res.json(productos.filter((p) => p.disponible === isDisp));
+    resultado = resultado.filter((p) => p.disponible === isDisp);
   }
-  res.json(productos);
+
+  if (tipo !== undefined) {
+    resultado = resultado.filter((p) => p.tipo === tipo);
+  }
+
+  res.json(resultado);
 });
 
 // GET /productos/:id

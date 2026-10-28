@@ -326,4 +326,46 @@ describe('tipo en /productos', () => {
     assert.equal(actual.nombre, 'Latte');
     assert.equal(actual.tipo, 'bebida_caliente');
   });
+
+  test('GET /productos?tipo=bebida_fria filtra por tipo', async () => {
+    const fria = await crear({ nombre: 'Agua de jamaica', tipo: 'bebida_fria' });
+    const caliente = await crear({ nombre: 'Café de olla', tipo: 'bebida_caliente' });
+    const alimento = await crear({ nombre: 'Torta de milanesa', tipo: 'alimento' });
+
+    const res = await fetch(`${baseUrl}/productos?tipo=bebida_fria`);
+    assert.equal(res.status, 200);
+    const lista = await res.json();
+    const ids = lista.map((p) => p.id);
+
+    assert.ok(ids.includes(fria.id));
+    assert.ok(!ids.includes(caliente.id));
+    assert.ok(!ids.includes(alimento.id));
+    assert.ok(lista.every((p) => p.tipo === 'bebida_fria'));
+  });
+
+  test('GET /productos?tipo=alimento filtra solo alimentos', async () => {
+    const alimento = await crear({ nombre: 'Sincronizada', tipo: 'alimento' });
+    const fria = await crear({ nombre: 'Refresco', tipo: 'bebida_fria' });
+
+    const res = await fetch(`${baseUrl}/productos?tipo=alimento`);
+    assert.equal(res.status, 200);
+    const lista = await res.json();
+    const ids = lista.map((p) => p.id);
+
+    assert.ok(ids.includes(alimento.id));
+    assert.ok(!ids.includes(fria.id));
+    assert.ok(lista.every((p) => p.tipo === 'alimento'));
+  });
+
+  test('GET /productos sin tipo no filtra y sigue incluyendo todos', async () => {
+    const fria = await crear({ nombre: 'Limonada', tipo: 'bebida_fria' });
+    const caliente = await crear({ nombre: 'Chocolate', tipo: 'bebida_caliente' });
+
+    const res = await fetch(`${baseUrl}/productos`);
+    assert.equal(res.status, 200);
+    const ids = (await res.json()).map((p) => p.id);
+
+    assert.ok(ids.includes(fria.id));
+    assert.ok(ids.includes(caliente.id));
+  });
 });
