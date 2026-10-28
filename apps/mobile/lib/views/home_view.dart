@@ -73,6 +73,8 @@ class _HomeViewState extends State<HomeView> {
         nombre: datos.nombre,
         precioCentavos: datos.precioCentavos,
         disponible: datos.disponible,
+        descripcion: datos.descripcion,
+        tipo: datos.tipo,
       );
     } else {
       ok = await _viewModel.actualizar(
@@ -80,6 +82,8 @@ class _HomeViewState extends State<HomeView> {
         nombre: datos.nombre,
         precioCentavos: datos.precioCentavos,
         disponible: datos.disponible,
+        descripcion: datos.descripcion,
+        tipo: datos.tipo,
       );
     }
 

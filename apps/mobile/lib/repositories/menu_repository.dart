@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../core/errors/http_failure.dart';
 import '../core/network/app_http_client.dart';
 import '../models/producto.dart';
+import '../models/tipo_producto.dart';
 
 /// Acceso al menú de la cafetería.
 ///
@@ -15,6 +16,8 @@ abstract class MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    String descripcion = '',
+    TipoProducto tipo = TipoProducto.alimento,
   });
 
   Future<Producto> actualizar(
@@ -22,6 +25,8 @@ abstract class MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    String? descripcion,
+    TipoProducto? tipo,
   });
 
   /// Baja lógica del producto: queda `disponible: false` (M-04).
@@ -58,6 +63,8 @@ class ApiMenuRepository implements MenuRepository {
     required String nombre,
     required int precioCentavos,
     bool disponible = true,
+    String descripcion = '',
+    TipoProducto tipo = TipoProducto.alimento,
   }) async {
     return _capturar409(() async {
       final response = await client.post(
@@ -70,6 +77,17 @@ class ApiMenuRepository implements MenuRepository {
       );
       return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
     });
+    final response = await client.post(
+      _uri(),
+      body: jsonEncode({
+        'nombre': nombre,
+        'descripcion': descripcion,
+        'tipo': tipo.json,
+        'precio_centavos': precioCentavos,
+        'disponible': disponible,
+      }),
+    );
+    return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
   }
 
   @override
@@ -78,6 +96,8 @@ class ApiMenuRepository implements MenuRepository {
     String? nombre,
     int? precioCentavos,
     bool? disponible,
+    String? descripcion,
+    TipoProducto? tipo,
   }) async {
     return _capturar409(() async {
       final response = await client.put(
@@ -90,6 +110,17 @@ class ApiMenuRepository implements MenuRepository {
       );
       return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
     });
+    final response = await client.put(
+      _uri(id),
+      body: jsonEncode({
+        'nombre': ?nombre,
+        'descripcion': ?descripcion,
+        'tipo': ?tipo?.json,
+        'precio_centavos': ?precioCentavos,
+        'disponible': ?disponible,
+      }),
+    );
+    return Producto.fromJson(_decodeObjeto(utf8.decode(response.bodyBytes)));
   }
 
   @override
