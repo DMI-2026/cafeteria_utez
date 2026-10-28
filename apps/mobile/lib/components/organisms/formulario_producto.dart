@@ -23,6 +23,21 @@ class ProductoFormData {
   });
 }
 
+/// Resultado de intentar guardar desde el formulario.
+///
+/// [exito] cierra la hoja. Si falla un 409, [errorNombre] va junto al campo.
+class ResultadoGuardado {
+  final bool exito;
+  final String? errorNombre;
+
+  const ResultadoGuardado.ok() : exito = true, errorNombre = null;
+
+  const ResultadoGuardado.fallo({this.errorNombre}) : exito = false;
+}
+
+/// Guarda los datos capturados; regresa [ResultadoGuardado.ok] si se guardaron.
+typedef GuardarProducto = Future<ResultadoGuardado> Function(ProductoFormData datos);
+
 /// Opciones del selector de tipo (M-06 · contrato de #5).
 const _tiposDisponibles = <_OpcionTipo>[
   _OpcionTipo(TipoProducto.alimento, 'Alimento'),
@@ -37,20 +52,27 @@ class _OpcionTipo {
 }
 
 /// Formulario para crear o editar un producto.
+///
+/// Espera a [onGuardar] antes de cerrarse: mientras guarda, el botón queda
+/// deshabilitado (un toque = una petición) y, si falla, el formulario sigue
+/// abierto con los datos capturados. Un 409 se muestra como error del nombre.
 class FormularioProducto extends StatefulWidget {
   final Producto? producto;
+  final GuardarProducto onGuardar;
 
-  const FormularioProducto({super.key, this.producto});
+  const FormularioProducto({super.key, this.producto, required this.onGuardar});
 
-  /// Abre el formulario como hoja inferior y regresa los datos o `null`.
-  static Future<ProductoFormData?> mostrar(
+  /// Abre el formulario como hoja inferior; regresa `true` si se guardó.
+  static Future<bool?> mostrar(
     BuildContext context, {
     Producto? producto,
+    required GuardarProducto onGuardar,
   }) {
-    return showModalBottomSheet<ProductoFormData>(
+    return showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => FormularioProducto(producto: producto),
+      builder: (context) =>
+          FormularioProducto(producto: producto, onGuardar: onGuardar),
     );
   }
 
@@ -64,6 +86,8 @@ class _FormularioProductoState extends State<FormularioProducto> {
   late final TextEditingController _precio;
   late final TextEditingController _descripcion;
   late bool _disponible;
+  bool _guardando = false;
+  String? _errorNombre;
   late TipoProducto _tipo;
 
   bool get _esEdicion => widget.producto != null;
@@ -91,11 +115,15 @@ class _FormularioProductoState extends State<FormularioProducto> {
     super.dispose();
   }
 
-  void _guardar() {
+  Future<void> _guardar() async {
+    // Un segundo toque antes de reconstruir el botón no manda otra petición.
+    if (_guardando) return;
+    setState(() => _errorNombre = null);
     if (!_formKey.currentState!.validate()) return;
 
     final precioCentavos = parsePrecioACentavos(_precio.text)!;
-    Navigator.of(context).pop(
+    setState(() => _guardando = true);
+    final resultado = await widget.onGuardar(
       ProductoFormData(
         nombre: _nombre.text.trim(),
         precioCentavos: precioCentavos,
@@ -104,6 +132,21 @@ class _FormularioProductoState extends State<FormularioProducto> {
         tipo: _tipo,
       ),
     );
+    if (!mounted) return;
+
+    if (resultado.exito) {
+      Navigator.of(context).pop(true);
+    } else {
+      setState(() {
+        _guardando = false;
+        _errorNombre = resultado.errorNombre;
+      });
+    }
+  }
+
+  void _alCambiarNombre(String _) {
+    if (_errorNombre == null) return;
+    setState(() => _errorNombre = null);
   }
 
   @override
@@ -149,10 +192,12 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 key: const Key('campo-nombre'),
                 controller: _nombre,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                onChanged: _alCambiarNombre,
+                decoration: InputDecoration(
                   labelText: 'Nombre',
                   hintText: 'Café americano',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
+                  errorText: _errorNombre,
                 ),
                 validator: (valor) {
                   if (valor == null || valor.trim().isEmpty) {
@@ -232,15 +277,32 @@ class _FormularioProductoState extends State<FormularioProducto> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _guardando
+                          ? null
+                          : () => Navigator.of(context).pop(),
                       child: const Text('Cancelar'),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: _guardar,
-                      child: const Text('Guardar'),
+                      key: const Key('boton-guardar'),
+                      onPressed: _guardando ? null : _guardar,
+                      child: _guardando
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Guardando…'),
+                              ],
+                            )
+                          : const Text('Guardar'),
                     ),
                   ),
                 ],

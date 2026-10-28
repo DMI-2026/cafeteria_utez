@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/errors/http_failure.dart';
+import '../core/format/nombre.dart';
 import '../models/producto.dart';
 import '../models/tipo_producto.dart';
 import '../repositories/menu_repository.dart';
@@ -13,12 +14,30 @@ class ProductosViewModel extends ChangeNotifier {
 
   List<Producto> _productos = const [];
   bool _cargando = false;
+  bool _guardando = false;
   String? _error;
+  String? _errorNombre;
 
   List<Producto> get productos => _productos;
   bool get cargando => _cargando;
+  bool get guardando => _guardando;
   String? get error => _error;
+
+  /// Mensaje de un 409 para mostrarlo junto al campo nombre del formulario.
+  String? get errorNombre => _errorNombre;
   bool get vacio => !_cargando && _error == null && _productos.isEmpty;
+
+  /// Indica si ya hay un producto con el mismo nombre normalizado en la lista
+  /// cargada, incluidos los agotados. Al editar, pasa [excluirId] para que el
+  /// propio producto no cuente como duplicado.
+  bool hayNombreDuplicado(String nombre, {String? excluirId}) {
+    final buscado = normalizarNombre(nombre);
+    return _productos.any(
+      (producto) =>
+          producto.id != excluirId &&
+          normalizarNombre(producto.nombre) == buscado,
+    );
+  }
 
   /// Carga el menú completo. Un fallo deja un mensaje que dice qué hacer.
   Future<void> cargar() async {
@@ -97,21 +116,34 @@ class ProductosViewModel extends ChangeNotifier {
     Future<Producto> Function() accion,
     String queHacer,
   ) async {
+    if (_guardando) return false;
+
+    _guardando = true;
     _error = null;
+    _errorNombre = null;
+    notifyListeners();
+
     try {
       await accion();
+      await cargar();
+      return true;
+    } on ClientFailure catch (e) {
+      if (e.statusCode == 409) {
+        _errorNombre = e.message;
+        return false;
+      }
+      _error = _mensaje(e, queHacer);
+      return false;
     } on HttpFailure catch (e) {
       _error = _mensaje(e, queHacer);
-      notifyListeners();
       return false;
     } catch (_) {
       _error = 'Ocurrió un error inesperado al $queHacer. Intenta de nuevo.';
-      notifyListeners();
       return false;
+    } finally {
+      _guardando = false;
+      notifyListeners();
     }
-
-    await cargar();
-    return true;
   }
 
   String _mensaje(HttpFailure failure, String queHacer) {

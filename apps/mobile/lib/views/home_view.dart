@@ -35,8 +35,37 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _abrirFormulario({Producto? producto}) async {
-    final datos = await FormularioProducto.mostrar(context, producto: producto);
-    if (datos == null || !mounted) return;
+    final guardado = await FormularioProducto.mostrar(
+      context,
+      producto: producto,
+      onGuardar: (datos) => _guardar(datos, producto: producto),
+    );
+    if (guardado != true || !mounted) return;
+
+    _avisar(
+      ok: true,
+      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    );
+  }
+
+  /// Lo llama el formulario y lo espera antes de cerrarse; si falla, el
+  /// formulario sigue abierto con los datos capturados. Un 409 regresa el
+  /// mensaje para el campo nombre (#17).
+  Future<ResultadoGuardado> _guardar(
+    ProductoFormData datos, {
+    Producto? producto,
+  }) async {
+    // Aviso local (#18): si se cancela, el formulario sigue abierto.
+    final duplicado = _viewModel.hayNombreDuplicado(
+      datos.nombre,
+      excluirId: producto?.id,
+    );
+    if (duplicado) {
+      final continuar = await _confirmarDuplicado();
+      if (continuar != true || !mounted) {
+        return const ResultadoGuardado.fallo();
+      }
+    }
 
     final bool ok;
     if (producto == null) {
@@ -58,10 +87,42 @@ class _HomeViewState extends State<HomeView> {
       );
     }
 
-    if (!mounted) return;
-    _avisar(
-      ok: ok,
-      exito: producto == null ? 'Producto agregado' : 'Cambios guardados',
+    if (ok) return const ResultadoGuardado.ok();
+
+    final errorNombre = _viewModel.errorNombre;
+    if (errorNombre != null) {
+      return ResultadoGuardado.fallo(errorNombre: errorNombre);
+    }
+
+    if (mounted) _avisar(ok: false, exito: '');
+    return const ResultadoGuardado.fallo();
+  }
+
+  /// Aviso local antes de enviar: la API sigue siendo la que decide si el
+  /// nombre es válido, pero aquí se evita un viaje innecesario.
+  Future<bool?> _confirmarDuplicado() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('aviso-duplicado'),
+        title: const Text('Nombre repetido'),
+        content: const Text(
+          'Ya hay un producto con ese nombre en la lista. '
+          '¿Enviar de todos modos?',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('aviso-duplicado-cancelar'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            key: const Key('aviso-duplicado-enviar'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -12,7 +12,10 @@ class FakeMenuRepository implements MenuRepository {
 
   Object? fallaAlListar;
   Object? fallaAlGuardar;
+  final List<Object> fallasAlCrear = <Object>[];
   int llamadasListar = 0;
+  int llamadasCrear = 0;
+  int llamadasActualizar = 0;
 
   List<Producto> get productos => List.unmodifiable(_productos);
 
@@ -31,6 +34,8 @@ class FakeMenuRepository implements MenuRepository {
     String descripcion = '',
     TipoProducto tipo = TipoProducto.alimento,
   }) async {
+    llamadasCrear++;
+    if (fallasAlCrear.isNotEmpty) throw fallasAlCrear.removeAt(0);
     if (fallaAlGuardar != null) throw fallaAlGuardar!;
     final producto = Producto(
       id: 'fake-${++_secuencia}',
@@ -53,6 +58,7 @@ class FakeMenuRepository implements MenuRepository {
     String? descripcion,
     TipoProducto? tipo,
   }) async {
+    llamadasActualizar++;
     if (fallaAlGuardar != null) throw fallaAlGuardar!;
     final index = _productos.indexWhere((p) => p.id == id);
     if (index == -1) {
