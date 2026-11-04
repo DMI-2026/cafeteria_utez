@@ -7,12 +7,14 @@ class EncabezadoMenu extends StatelessWidget {
   final int totalProductos;
   final int disponibles;
   final bool cargando;
+  final VoidCallback? onCerrarSesion;
 
   const EncabezadoMenu({
     super.key,
     required this.totalProductos,
     required this.disponibles,
     this.cargando = false,
+    this.onCerrarSesion,
   });
 
   String get _resumen {
@@ -74,6 +76,12 @@ class EncabezadoMenu extends StatelessWidget {
                 ],
               ),
             ),
+            if (onCerrarSesion != null)
+              IconButton(
+                tooltip: 'Cerrar sesión',
+                icon: const Icon(Icons.logout),
+                onPressed: onCerrarSesion,
+              ),
           ],
         ),
       ),

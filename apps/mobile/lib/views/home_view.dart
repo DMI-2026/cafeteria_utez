@@ -11,8 +11,9 @@ import '../viewmodels/productos_view_model.dart';
 /// Pantalla de inicio: el menú completo con las acciones del CRUD.
 class HomeView extends StatefulWidget {
   final MenuRepository repository;
+  final VoidCallback? onCerrarSesion;
 
-  const HomeView({super.key, required this.repository});
+  const HomeView({super.key, required this.repository, this.onCerrarSesion});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -128,6 +129,7 @@ class _HomeViewState extends State<HomeView> {
                   .where((producto) => producto.disponible)
                   .length,
               cargando: _viewModel.cargando,
+              onCerrarSesion: widget.onCerrarSesion,
             ),
             Expanded(child: _contenido()),
           ],
