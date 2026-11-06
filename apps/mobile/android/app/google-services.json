@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "223866053428",
+    "project_id": "cafeteria-carsi",
+    "storage_bucket": "cafeteria-carsi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223866053428:android:57ed123c27767e59de3b61",
+        "android_client_info": {
+          "package_name": "mx.edu.utez.cafeteria_utez"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmMotX_BFwIy9wOrOCGyMfgg-BbRwwmMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

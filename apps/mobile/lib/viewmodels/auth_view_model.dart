@@ -38,7 +38,7 @@ class AuthViewModel extends ChangeNotifier {
   Future<bool> _ejecutar(Future<Object?> Function() accion) async {
     _cargando = true;
     _error = '';
-    notifyListeners();
+    notifyListeners();//Notifica a las vistas de lo que esta pasando
     try {
       await accion();
       return true;
