@@ -1,1 +1,38 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"cafeteria-carsi","appId":"1:223866053428:android:57ed123c27767e59de3b61","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"cafeteria-carsi","configurations":{"android":"1:223866053428:android:57ed123c27767e59de3b61","web":"1:223866053428:web:9f2dfb3718edea5ede3b61"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "cafeteria-carsi",
+          "appId": "1:223866053428:android:57ed123c27767e59de3b61",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "cafeteria-carsi",
+          "configurations": {
+            "android": "1:223866053428:android:57ed123c27767e59de3b61",
+            "web": "1:223866053428:web:9f2dfb3718edea5ede3b61"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "singleProjectMode": true
+  }
+}

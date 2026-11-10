@@ -118,6 +118,10 @@ class ProductosViewModel extends ChangeNotifier {
     return switch (failure) {
       ConnectionFailure() =>
         'No pudimos $queHacer: revisa tu conexión e intenta de nuevo.',
+      // Con Firestore, 403 significa que las reglas negaron la escritura.
+      ClientFailure(statusCode: 403) =>
+        'No tienes permiso para $queHacer. '
+            'Solo el personal de la cafetería puede cambiar el menú.',
       ClientFailure(:final statusCode) =>
         'El servidor rechazó los datos ($statusCode). Revisa los campos e intenta de nuevo.',
       ServerFailure(:final statusCode) =>

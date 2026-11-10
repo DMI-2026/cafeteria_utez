@@ -127,6 +127,33 @@ void main() {
       expect(vm.error, contains('servidor'));
     });
 
+    test('sin permiso (403) lo dice en lugar de culpar a los campos', () async {
+      final repo = FakeMenuRepository(inicial: [cafe])
+        ..fallaAlGuardar = const ClientFailure(403);
+      final vm = ProductosViewModel(repo);
+      await vm.cargar();
+
+      final ok = await vm.crear(nombre: 'Té', precioCentavos: 1000);
+
+      expect(ok, isFalse);
+      expect(
+        vm.error,
+        'No tienes permiso para guardar el producto. '
+        'Solo el personal de la cafetería puede cambiar el menú.',
+      );
+    });
+
+    test('un 400 sigue pidiendo revisar los campos', () async {
+      final repo = FakeMenuRepository(inicial: [cafe])
+        ..fallaAlGuardar = const ClientFailure(400);
+      final vm = ProductosViewModel(repo);
+      await vm.cargar();
+
+      await vm.crear(nombre: 'Té', precioCentavos: 1000);
+
+      expect(vm.error, contains('Revisa los campos'));
+    });
+
     test('notifica a quien escucha en cada cambio de estado', () async {
       final vm = ProductosViewModel(FakeMenuRepository(inicial: [cafe]));
       var notificaciones = 0;

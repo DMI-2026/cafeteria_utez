@@ -54,7 +54,7 @@ erDiagram
 | Entidad | Qué representa | Quién la crea | Quién la lee |
 |---|---|---|---|
 | USUARIO | Persona registrada con Firebase Auth | La app, al registrarse | La app y la cocina (solo el nombre) |
-| PRODUCTO | Algo que la cafetería vende | La cocina o el administrador, desde la consola de Firebase | La app |
+| PRODUCTO | Algo que la cafetería vende | El personal de la cafetería desde la app (solo quien tiene documento en `personal/{uid}`, `firestore.rules`) | La app, con sesión iniciada |
 | PEDIDO | Una compra pendiente o entregada, con su número de 3 dígitos | La app, al confirmar | La persona que lo hizo y la cocina |
 | LINEA_PEDIDO | Un producto y su cantidad dentro de un pedido | La app, al confirmar | La persona que lo hizo y la cocina |
 

@@ -1,0 +1,46 @@
+rules_version = '2';
+
+// Mínimo privilegio: cualquiera con sesión lee el menú; solo el personal
+// lo escribe; nadie borra productos (M-04); cada quien ve solo su perfil.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // El rol "personal" es la existencia de personal/{uid}; se crea a mano.
+    function esPersonal() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/personal/$(request.auth.uid));
+    }
+
+    match /productos/{id} {
+      allow read: if request.auth != null;
+      allow create, update: if esPersonal()
+        && request.resource.data.keys().hasOnly(
+             ['nombre', 'precio_centavos', 'disponible', 'descripcion', 'tipo'])
+        && request.resource.data.nombre is string
+        && request.resource.data.precio_centavos is int
+        && request.resource.data.precio_centavos >= 0
+        && request.resource.data.disponible is bool;
+      allow delete: if false;
+    }
+
+    match /usuarios/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['correo', 'nombre']);
+      allow delete: if false;
+    }
+
+    match /personal/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /pedidos/{id} {
+      allow create: if request.auth != null
+        && request.resource.data.usuario_id == request.auth.uid;
+      allow read: if request.auth != null
+        && (resource.data.usuario_id == request.auth.uid || esPersonal());
+      allow update: if esPersonal();
+    }
+  }
+}

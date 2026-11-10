@@ -1,22 +1,26 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'core/network/app_http_client.dart';
 import 'core/network/backend_config.dart';
 import 'core/theme/app_theme.dart';
+import 'firebase_options.dart';
 import 'repositories/auth_repository.dart';
+import 'repositories/firebase_auth_repository.dart';
+import 'repositories/firestore_menu_repository.dart';
 import 'repositories/menu_repository.dart';
 import 'views/puerta_sesion_view.dart';
 
-//Importar firebase
-import 'package:firebase_core/firebase_core.dart';
-
-import 'firebase_options.dart';
-import 'repositories/firebase_auth_repository.dart';
-
-void main() async {
+Future<void> main() async {
+  // Firebase debe estar listo antes de crear cualquier repositorio.
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(CafeteriaApp(authRepository: FirebaseAuthRepository()));
+  runApp(
+    CafeteriaApp(
+      authRepository: FirebaseAuthRepository(),
+      repository: FirestoreMenuRepository(),
+    ),
+  );
 }
 
 class CafeteriaApp extends StatelessWidget {
@@ -33,6 +37,7 @@ class CafeteriaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sin repositorio explícito se usa la API Express (respaldo y pruebas).
     final menuRepository =
         repository ??
         ApiMenuRepository(
