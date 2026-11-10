@@ -48,7 +48,7 @@ Que la comunidad universitaria haga pedidos a la cafetería de la UTEZ desde el 
 | # | Riesgo | Mitigación | Responsable |
 |---|---|---|---|
 | R-01 | Las cuotas gratuitas de Firebase no alcanzan en hora pico | Paginar el menú y medir lecturas por pedido en la semana 9; si se acerca a la cuota, reducir lecturas antes de agregar funciones | Profesor |
-| R-02 | ~~Open-Meteo no responde o tarda~~ Ya no aplica: se retiró la sugerencia por clima (I-04). | La sugerencia es opcional: a los 3 segundos se omite y el menú aparece completo (H-01) | Profesor |
+| R-02 | ~~Open-Meteo no responde o tarda~~ Ya no aplica: se retiró la sugerencia por clima (I-04). | — | Profesor |
 | R-03 | La cafetería no entrega el menú real a tiempo | Empezar con 10 productos de prueba y cambiarlos desde la consola de Firebase; ningún trámite bloquea la fase 1 | Profesor |
 
 ## Criterios de aceptación de alto nivel
