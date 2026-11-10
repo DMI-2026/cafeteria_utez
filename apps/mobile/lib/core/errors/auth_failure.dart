@@ -3,8 +3,8 @@ sealed class AuthFailure implements Exception {
   const AuthFailure();
 }
 
-class CredencialesIvalidas extends AuthFailure {
-  const CredencialesIvalidas();
+class CredencialesInvalidas extends AuthFailure {
+  const CredencialesInvalidas();
 }
 
 class CorreoYaRegistrado extends AuthFailure {

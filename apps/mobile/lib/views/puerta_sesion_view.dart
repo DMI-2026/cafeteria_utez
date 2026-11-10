@@ -5,6 +5,7 @@ import '../repositories/menu_repository.dart';
 import '../viewmodels/auth_view_model.dart';
 import 'home_view.dart';
 import 'login_view.dart';
+import 'registro_view.dart';
 
 /// Muestra el indicador, el login o el menú según el estado de la sesión.
 class PuertaSesionView extends StatefulWidget {
@@ -23,6 +24,7 @@ class PuertaSesionView extends StatefulWidget {
 
 class _PuertaSesionViewState extends State<PuertaSesionView> {
   late final AuthViewModel _auth;
+  bool _mostrarRegistro = false;
 
   @override
   void initState() {
@@ -52,8 +54,24 @@ class _PuertaSesionViewState extends State<PuertaSesionView> {
             onCerrarSesion: _auth.cerrarSesion,
           );
         }
-        return LoginView(viewModel: _auth);
+        // Un booleano en lugar de rutas: al entrar no queda nada apilado
+        // debajo del menú.
+        if (_mostrarRegistro) {
+          return RegistroView(
+            viewModel: _auth,
+            onIrALogin: () => _cambiarA(registro: false),
+          );
+        }
+        return LoginView(
+          viewModel: _auth,
+          onIrARegistro: () => _cambiarA(registro: true),
+        );
       },
     );
+  }
+
+  void _cambiarA({required bool registro}) {
+    _auth.limpiarError();
+    setState(() => _mostrarRegistro = registro);
   }
 }

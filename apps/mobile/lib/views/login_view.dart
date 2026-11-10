@@ -28,7 +28,7 @@ class _LoginViewState extends State<LoginView> {
 
   void _enviar() => widget.viewModel.iniciarSesion(
     correo: _correo.text,
-    constrasena: _contrasena.text,
+    contrasena: _contrasena.text,
   );
 
   @override

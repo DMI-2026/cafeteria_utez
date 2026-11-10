@@ -2,6 +2,7 @@ import 'package:cafeteria_utez/core/errors/auth_failure.dart';
 import 'package:cafeteria_utez/models/usuario.dart';
 import 'package:cafeteria_utez/repositories/auth_repository.dart';
 import 'package:flutter/foundation.dart';
+
 import 'dart:async';
 
 class AuthViewModel extends ChangeNotifier {
@@ -29,16 +30,33 @@ class AuthViewModel extends ChangeNotifier {
 
   static String? validarCorreo(String correo) =>
       _formatoCorreo.hasMatch(correo.trim())
-          ? null
-          : 'Correo con formato invalido';
+      ? null
+      : 'Escribe un correo válido.';
 
-  static String? validarContrasena(String contrasena) =>
-      contrasena.length >= 8 ? null : 'Minimo 8 Caracteres';
+  static String? validarContrasena(String contrasena) => contrasena.length >= 8
+      ? null
+      : 'La contraseña debe tener al menos 8 caracteres.';
 
-  Future<bool> _ejecutar(Future<Object?> Function() accion) async {
+  static String? validarNombre(String nombre) =>
+      nombre.trim().length >= 2 ? null : 'Escribe tu nombre (mínimo 2 letras).';
+
+  /// Valida antes de llamar al repositorio: un dato mal escrito no gasta red.
+  Future<bool> _ejecutar(
+    List<String?> validaciones,
+    Future<Object?> Function() accion,
+  ) async {
+    final invalido = validaciones.firstWhere(
+      (m) => m != null,
+      orElse: () => null,
+    );
+    if (invalido != null) {
+      _error = invalido;
+      notifyListeners();
+      return false;
+    }
     _cargando = true;
     _error = '';
-    notifyListeners();//Notifica a las vistas de lo que esta pasando
+    notifyListeners(); // Notifica a las vistas que empezó la operación
     try {
       await accion();
       return true;
@@ -65,13 +83,14 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<bool> iniciarSesion({
     required String correo,
-    required String constrasena,
+    required String contrasena,
   }) async {
     return await _ejecutar(
+      [validarCorreo(correo), validarContrasena(contrasena)],
       () async {
         _usuario = await _repository.iniciarSesion(
-          correo: correo,
-          constrasena: constrasena,
+          correo: correo.trim(),
+          contrasena: contrasena,
         );
         return null;
       },
@@ -84,15 +103,27 @@ class AuthViewModel extends ChangeNotifier {
     required String nombre,
   }) async {
     return await _ejecutar(
+      [
+        validarNombre(nombre),
+        validarCorreo(correo),
+        validarContrasena(contrasena),
+      ],
       () async {
         _usuario = await _repository.registrar(
-          correo: correo,
+          correo: correo.trim(),
           contrasena: contrasena,
-          nombre: nombre,
+          nombre: nombre.trim(),
         );
         return null;
       },
     );
+  }
+
+  /// Al cambiar entre login y registro, el error de una no se queda en la otra.
+  void limpiarError() {
+    if (_error.isEmpty) return;
+    _error = '';
+    notifyListeners();
   }
 
   Future<void> cerrarSesion() async {
@@ -103,7 +134,7 @@ class AuthViewModel extends ChangeNotifier {
 
   String _mensaje(AuthFailure failure) {
     return switch (failure) {
-      CredencialesIvalidas() => 'Correo o contraseña incorrectos.',
+      CredencialesInvalidas() => 'Correo o contraseña incorrectos.',
       CorreoYaRegistrado() => 'El correo ya está registrado.',
       ContrasenaDebil() => 'La contraseña es muy débil.',
       CorreoNoConfirmado() => 'El correo no ha sido confirmado.',

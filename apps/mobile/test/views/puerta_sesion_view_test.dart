@@ -3,6 +3,7 @@ import 'package:cafeteria_utez/repositories/fake_auth_repository.dart';
 import 'package:cafeteria_utez/views/home_view.dart';
 import 'package:cafeteria_utez/views/login_view.dart';
 import 'package:cafeteria_utez/views/puerta_sesion_view.dart';
+import 'package:cafeteria_utez/views/registro_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -90,6 +91,42 @@ void main() {
       expect(find.byType(HomeView), findsNothing);
     },
   );
+
+  testWidgets('registrarse desde el login lleva al menú', (tester) async {
+    await tester.pumpWidget(_app(FakeAuthRepository()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Crear una cuenta'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RegistroView), findsOneWidget);
+
+    await tester.enterText(find.widgetWithText(TextField, 'Nombre'), 'Ana');
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Correo'),
+      'ana@utez.edu.mx',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Contraseña'),
+      'cafeteria2026',
+    );
+    await tester.tap(find.text('Registrarme'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeView), findsOneWidget);
+    expect(find.byType(RegistroView), findsNothing);
+  });
+
+  testWidgets('desde el registro se puede volver al login', (tester) async {
+    await tester.pumpWidget(_app(FakeAuthRepository()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Crear una cuenta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ya tengo cuenta'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(LoginView), findsOneWidget);
+  });
 
   testWidgets('cerrar sesión regresa al login', (tester) async {
     await tester.pumpWidget(_app(FakeAuthRepository(sesionInicial: _personal)));

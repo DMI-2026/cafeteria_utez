@@ -4,7 +4,7 @@ abstract class AuthRepository {
   Stream<Usuario?> get sesion;
   Future<Usuario?> iniciarSesion({
     required String correo,
-    required String constrasena,
+    required String contrasena,
   });
   Future<Usuario?> registrar({
     required String correo,

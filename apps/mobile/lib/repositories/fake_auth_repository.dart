@@ -35,11 +35,11 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<Usuario> iniciarSesion({
     required String correo,
-    required String constrasena,
+    required String contrasena,
   }) async {
     final cuenta = _cuentas[correo.trim()];
-    if (cuenta == null || cuenta.contrasena != constrasena) {
-      throw const CredencialesIvalidas();
+    if (cuenta == null || cuenta.contrasena != contrasena) {
+      throw const CredencialesInvalidas();
     }
     _emitir(cuenta.usuario);
     return cuenta.usuario;
