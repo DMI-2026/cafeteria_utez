@@ -8,29 +8,25 @@ App para pedir en la cafetería sin hacer fila. Las decisiones viven en `docs/` 
 |---|---|
 | Verificar todo (único criterio de «listo», C-04) | `./scripts/check.sh` |
 | Pruebas de la app | `cd apps/mobile && flutter analyze && flutter test` |
-| Pruebas de la API | `cd apps/api && npm test` (`node --test`) |
-| Levantar la API | `cd apps/api && npm start` (puerto `PORT`, por defecto 3000) |
 | Activar el hook | `git config core.hooksPath .githooks` |
 
 ## Dónde va cada cosa
 
-- `apps/api/src/`: Express 5. `app.js` monta rutas, `server.js` escucha, un archivo por recurso (`productos.js`, `usuarios.js`). Pruebas en `apps/api/test/<recurso>.test.js`.
 - `apps/mobile/lib/` (MVVM + Atomic Design, C-08):
   - `models/`: datos con `fromJson`, `toJson`, `copyWith`.
-  - `repositories/`: única capa que habla con la API, a través de `core/network/app_http_client.dart` (C-10).
+  - `repositories/`: única capa que habla con Firebase; traduce sus errores a fallas de la app (C-13). No hay servidor propio (D-11).
   - `viewmodels/`: `ChangeNotifier`; sin widgets.
   - `views/`: pantallas; `components/atoms|molecules|organisms/`: piezas reutilizables.
-  - `core/`: `errors/` (`HttpFailure` sellado), `format/` (dinero), `network/`, `theme/` (C-11).
+  - `core/`: `errors/` (`AuthFailure` y `HttpFailure` sellados), `format/` (dinero), `theme/` (C-11).
 - `apps/mobile/test/` refleja la estructura de `lib/`; los dobles de prueba van en `test/fakes/`.
 
 ## Reglas de código
 
 - Dinero en centavos enteros (`precio_centavos`, `int`); se formatea solo con `core/format/dinero.dart` (M-01).
 - Un producto no se borra: `DELETE` marca `disponible: false` (M-04).
-- Errores HTTP en la app: atrapa `HttpFailure` en el repositorio o view model; nunca uses `http` directo fuera de `core/network/`.
-- La API responde `{ "error": "<mensaje en español>" }` con 400, 404 o 409; nunca falla en silencio (ni si el puerto está ocupado).
+- Errores: el repositorio atrapa la excepción de Firebase y lanza una falla sellada; el view model la convierte en un mensaje en español. Nunca llames a `FirebaseAuth.instance` o `FirebaseFirestore.instance` fuera de `repositories/`.
 - Estilo visual solo con el tema de `core/theme/`; no agregues paquetes de UI (C-11).
-- Dependencias nuevas: solo con una decisión C- o D- que las justifique. Pruebas de la API sin Jest ni similares (C-05).
+- Dependencias nuevas: solo con una decisión C- o D- que las justifique.
 - Fuera de la v1: pagos, lealtad y web. No los propongas sin cambiar antes el alcance (D-04, D-07, D-08).
 
 ## Cómo se trabaja
@@ -45,6 +41,6 @@ App para pedir en la cafetería sin hacer fila. Las decisiones viven en `docs/` 
 
 ## Nunca
 
-- Secretos o llaves en el repo; variables en `.env` ignorado (I-02).
+- Secretos o llaves en el repo (I-02): ninguna llave de servicio de Firebase.
 - `--no-verify`, desactivar el hook, o borrar o debilitar pruebas para que pasen.
 - Cambiar el contrato de datos de un issue sin avisar en ese issue.

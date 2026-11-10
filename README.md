@@ -9,7 +9,6 @@ Proyecto de clase de Desarrollo Móvil Integral (10.º cuatrimestre, DATID, UTEZ
 | Carpeta o archivo | Qué es |
 |---|---|
 | `apps/mobile/` | App Flutter (`cafeteria_utez`, org `mx.edu.utez`) |
-| `apps/api/` | API Node + Express con `GET /health` (ver su `README.md`) |
 | `docs/` | `01-alcance.md` (SOW), `02-prd.md`, `03-integraciones.md`, `05-datos.md`, `06-convenciones.md`; `04-arquitectura.md` se omite y el SOW dice por qué |
 | `CONTRIBUIDORES.md` | Padrón de integrantes de DMI-2026 y directrices para control de cambios |
 | `AGENTS.md` | Reglas para cualquier persona o agente |
@@ -21,22 +20,19 @@ Este proyecto de clase tiene un solo autor, así que no hay reparto de roles. En
 
 ## Cómo correrlo
 
-Requisitos: Git, Flutter estable (Dart 3) y Node 22 o 24.
+Requisitos: Git y Flutter estable (Dart 3). No hay servidor propio: la app habla directo con Firebase (D-11).
 
 ```bash
 git clone <url-del-repositorio> cafeteria-utez && cd cafeteria-utez
 git config core.hooksPath .githooks        # activa el hook pre-commit
-(cd apps/api && npm install)
 (cd apps/mobile && flutter pub get)
-./scripts/check.sh                          # analiza y prueba la app y la API
+./scripts/check.sh                          # analiza y prueba la app
 ```
 
 | Qué | Comando |
 |---|---|
 | Verificar todo | `./scripts/check.sh` |
-| Levantar la API (`http://localhost:3000/health`) | `cd apps/api && npm start` |
 | Correr la app | `cd apps/mobile && flutter run` |
-| Pruebas de la API | `cd apps/api && npm test` |
 | Pruebas y análisis de la app | `cd apps/mobile && flutter analyze && flutter test` |
 
 ## Etiquetas por sesión

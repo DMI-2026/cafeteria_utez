@@ -10,21 +10,21 @@
 | C-02 | Conventional Commits en español (`feat`, `fix`, `docs`, `test`, `chore`) | Mensajes libres | Historial legible para el equipo y para la defensa | 2026-10-22 |
 | C-03 | `main` solo recibe pull requests aprobados por otra persona | Aprobar el propio PR | La revisión automática es un sensor más, no la aprobación | 2026-10-22 |
 | C-04 | `./scripts/check.sh` es la única forma de verificar, y el hook `pre-commit` lo ejecuta | Recordar correr cada comando a mano | El mismo comando para personas, agentes y hook; un commit con una prueba rota es rechazado | 2026-10-22 |
-| C-05 | API: pruebas con `node --test`, sin frameworks extra | Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
+| C-05 | ~~API: pruebas con `node --test`, sin frameworks extra~~ Sin API desde D-11; las pruebas son solo de Flutter. | Jest | Cero dependencias de pruebas que mantener | 2026-10-22 |
 | C-06 | Una prueba nueva se escribe primero y se ve fallar antes de implementar (rojo y luego verde) | Escribir la prueba al final | Una prueba que nunca falló no demuestra que detecta el error | 2026-10-22 |
-| C-07 | Middleware `cors` habilitado globalmente en la API Express | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
+| C-07 | ~~Middleware `cors` habilitado globalmente en la API Express~~ Sin API desde D-11. | Cabeceras manuales o restringir orígenes en desarrollo | Permite que clientes como Flutter (en emulador, dispositivo físico o web) consuman los endpoints sin bloqueos de origen cruzado | 2026-10-26 |
 | C-08 | Arquitectura MVVM y componentes con Atomic Design (`atoms`, `molecules`, `organisms`) en Flutter | Estructura monolítica sin separación de responsabilidades | Favorece separación clara entre estado/lógica y vistas, además de alta reutilización de componentes de interfaz | 2026-10-26 |
 | C-09 | Padrón y control de cambios formalizado en `CONTRIBUIDORES.md` para la organización DMI-2026 | Dejar directrices dispersas en AGENTS/README o sin padrón explícito | Mapea con certeza a los 31 miembros de DMI-2026 y establece las reglas de ramas, commits y PRs para el control de cambios | 2026-10-26 |
-| C-10 | Cliente HTTP centralizado en `lib/core/` con `http` oficial, soporte Bearer token y errores sellados (`HttpFailure`) | Llamadas dispersas con `http` directo o excepciones genéricas no tipadas | Estandariza timeouts, encabezados de autenticación, esquemas `http`/`https` y permite pattern matching exhaustivo al capturar fallos de red y servidor | 2026-10-26 |
+| C-10 | ~~Cliente HTTP centralizado en `lib/core/` con `http` oficial, soporte Bearer token y errores sellados (`HttpFailure`)~~ Sustituida por C-14. | Llamadas dispersas con `http` directo o excepciones genéricas no tipadas | Estandariza timeouts, encabezados de autenticación, esquemas `http`/`https` y permite pattern matching exhaustivo al capturar fallos de red y servidor | 2026-10-26 |
 | C-11 | Identidad visual propia con `ThemeData` en `lib/core/theme/` (paleta café y crema, tarjetas redondeadas, sin ripple, encabezado propio en lugar de `AppBar`) sin agregar paquetes de tema ni de fuentes | Quedarse con `ColorScheme.fromSeed` y los componentes por defecto, o usar `google_fonts` | La app deja de verse como un formulario de Android sin sumar dependencias: un solo archivo de tema mantiene colores y formas consistentes y las pruebas siguen corriendo sin red | 2026-10-26 |
 | C-12 | Dependencias de Firebase: `firebase_core`, `firebase_auth` y `cloud_firestore` (versiones de pub.dev al 2026-10-27) | Hablar con Firebase por HTTP con `http` | Con HTTP tendríamos que reimplementar sesiones y renovación de tokens; los paquetes oficiales guardan la sesión en el dispositivo | 2026-11-10 |
 | C-13 | `AuthRepository` abstracto con fallas selladas (`AuthFailure`); `FirebaseAuthRepository` y `FirestoreMenuRepository` traducen los códigos de Firebase a fallas de la app y las pruebas usan dobles sin red | Llamar a `FirebaseAuth.instance` o `FirebaseFirestore.instance` desde el ViewModel | El ViewModel no se puede probar sin red y la pantalla terminaría mostrando textos técnicos de Firebase | 2026-11-10 |
+| C-14 | Sin cliente HTTP propio: se borran `AppHttpClient` y el paquete `http`; `HttpFailure` se queda como la falla que `FirestoreMenuRepository` traduce para `ProductosViewModel` | Conservar el cliente HTTP por si se ocupa después | Sin API ni servicio REST nadie lo usaba; código sin uso confunde a quien lo lee y se vuelve a escribir cuando haga falta | 2026-11-10 |
 
 ## Organización del repositorio
 
 ```text
 apps/mobile/       app Flutter (cafeteria_utez, org mx.edu.utez)
-apps/api/          API Node + Express (src/, test/)
 docs/              alcance, PRD, integraciones, modelo de datos y convenciones
 CONTRIBUIDORES.md  padrón de integrantes y directrices de control de cambios
 scripts/           check.sh, el sensor que verifica todo
@@ -35,9 +35,8 @@ README.md          cómo correr el proyecto y las etiquetas por sesión
 
 ## Patrones de código
 
-- Flutter: arquitectura MVVM en `lib/` (`models/`, `viewmodels/`, `views/`), capa `core/` (`network/`, `errors/`) y componentes reutilizables con Atomic Design (`components/atoms/`, `components/molecules/`, `components/organisms/`).
+- Flutter: arquitectura MVVM en `lib/` (`models/`, `viewmodels/`, `views/`), capa `core/` (`errors/`, `format/`, `theme/`) y componentes reutilizables con Atomic Design (`components/atoms/`, `components/molecules/`, `components/organisms/`).
 - Flutter: el tema vive en `lib/core/theme/app_theme.dart` (`AppColors`, `AppSpacing`, `AppRadii`); ningún widget escribe colores literales fuera de ahí (C-11).
-- Backend: un archivo por recurso en `apps/api/src/` (`menu.js`, `pedidos.js`) que exporta su router; `app.js` solo los monta y `server.js` solo arranca.
 - Nombres en inglés para clases y funciones; textos de pantalla en español; errores con un mensaje que diga qué hacer.
 - Dart: `dart format` y `flutter analyze` sin advertencias antes de cada commit.
 
@@ -49,8 +48,7 @@ README.md          cómo correr el proyecto y las etiquetas por sesión
 ## Estrategia de testing
 
 - App: un widget test por cada widget con lógica y pruebas unitarias para el estado; se corren con `cd apps/mobile && flutter test`.
-- Backend: una prueba por endpoint en `apps/api/test/<recurso>.test.js` que levanta la app en un puerto libre; se corren con `cd apps/api && npm test`.
-- Las dos se corren juntas con `./scripts/check.sh` antes de cada commit; si fallan, el hook rechaza el commit y no se usa `--no-verify`.
+- Se corren con `./scripts/check.sh` antes de cada commit; si fallan, el hook rechaza el commit y no se usa `--no-verify`.
 - Un bug corregido llega con la prueba que lo habría detectado.
 
 ## Flujo de Git
@@ -64,7 +62,6 @@ README.md          cómo correr el proyecto y las etiquetas por sesión
 ```bash
 git clone <url-del-repositorio> cafeteria-utez && cd cafeteria-utez
 git config core.hooksPath .githooks
-(cd apps/api && npm install)
 (cd apps/mobile && flutter pub get)
 ./scripts/check.sh
 ```

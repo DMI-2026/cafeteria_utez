@@ -27,7 +27,6 @@ Criterios de aceptación:
 - El menú aparece en menos de 2 segundos con conexión Wi-Fi.
 - Cada producto muestra nombre y precio en pesos.
 - Un producto agotado se ve gris y no se puede agregar al pedido.
-- Con más de 25 °C el menú sugiere una bebida fría y con menos de 18 °C una caliente; si el clima no responde en 3 segundos, la sugerencia se omite y el menú aparece completo.
 
 ### H-02 · Hacer un pedido
 
@@ -52,7 +51,7 @@ Criterios de aceptación:
 
 ## Requisitos no funcionales
 
-- Seguridad: el token de sesión se guarda en almacenamiento seguro del dispositivo, nunca en texto plano (semana 7), y todo el tráfico entre la app y la API viaja por HTTPS.
+- Seguridad: el token de sesión se guarda en almacenamiento seguro del dispositivo, nunca en texto plano (semana 7), y todo el tráfico entre la app y Firebase viaja por HTTPS.
 - Seguridad: las reglas de Firestore permiten leer y escribir un pedido solo a quien lo creó y a la cocina (semanas 6 y 9).
 - Privacidad: solo se guardan el correo institucional y el nombre; no se piden teléfono ni ubicación (semana 6).
 - Rendimiento: la lista del menú carga en menos de 2 segundos con Wi-Fi.

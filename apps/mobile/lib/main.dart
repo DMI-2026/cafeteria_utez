@@ -1,8 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'core/network/app_http_client.dart';
-import 'core/network/backend_config.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'repositories/auth_repository.dart';
@@ -25,32 +23,22 @@ Future<void> main() async {
 
 class CafeteriaApp extends StatelessWidget {
   final AuthRepository authRepository;
-  final AppHttpClient? httpClient;
-  final MenuRepository? repository;
+  final MenuRepository repository;
 
   const CafeteriaApp({
     super.key,
     required this.authRepository,
-    this.httpClient,
-    this.repository,
+    required this.repository,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Sin repositorio explícito se usa la API Express (respaldo y pruebas).
-    final menuRepository =
-        repository ??
-        ApiMenuRepository(
-          client: httpClient ?? AppHttpClient(),
-          baseUrl: defaultBackendBaseUrl,
-        );
-
     return MaterialApp(
       title: 'Cafetería UTEZ',
       theme: AppTheme.light,
       home: PuertaSesionView(
         authRepository: authRepository,
-        menuRepository: menuRepository,
+        menuRepository: repository,
       ),
     );
   }

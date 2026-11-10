@@ -75,7 +75,7 @@ Para garantizar la estabilidad del proyecto, cada persona contribuidora debe ape
 - **Nunca hacer push directo a `main`**.
 - Trabajar en ramas aisladas basadas en issues:
   - Funcionalidades: `feat/<número-issue>-<descripción-corta>` (ej. `feat/1-crud-productos`)
-  - Correcciones de errores: `fix/<número-issue>-<descripción-corta>` (ej. `fix/4-puerto-api`)
+  - Correcciones de errores: `fix/<número-issue>-<descripción-corta>` (ej. `fix/4-precio-negativo`)
   - Documentación o tareas de mantenimiento: `docs/<tema>` o `chore/<tema>`
 
 ### B. Formato de commits (C-02)
@@ -92,9 +92,8 @@ Para garantizar la estabilidad del proyecto, cada persona contribuidora debe ape
 - El hook pre-commit instalado en `.githooks` rechaza automáticamente cualquier commit que no pase el análisis o cuyas pruebas fallen.
 - **Prohibido** usar `--no-verify` o saltarse las pruebas.
 
-### D. Pruebas y TDD (C-05, C-06)
+### D. Pruebas y TDD (C-06)
 - Toda nueva característica o corrección debe acompañarse de su prueba correspondiente.
-- Backend: pruebas con `node --test` (sin frameworks externos como Jest).
 - Flutter: pruebas unitarias y de widgets con `flutter test`.
 - Se sigue el ciclo: escribir la prueba primero, verla fallar y luego implementar hasta que pase.
 
